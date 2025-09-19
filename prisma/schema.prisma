@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar
+  name                 String
+  industry             String
+  country              String
+  employees            Int?
+  revenue              String?
+  headquarters         String?
+  ceo                  String?
+  founded              Int?
+  website              String?
+  businessAreas        String[]      @default([])
+  digitalTwinStatus    String        @default("not_started")
+  digitalTwinMaturity  Int           @default(0)
+  opportunityScore     Int           @default(0)
+  estimatedDealValue   String?
+  lastUpdated          DateTime?     @default(now())
+  nextFollowUp         DateTime?
+  notes                String?
+  competitiveAnalysis  String?
+  dellOpportunity      String?
+  digitalTwinStrategy  String?
+
+  activityLogs ActivityLog[]
+
+  @@map("companies")
+}
+
+model ActivityLog {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar
+  companyId   String?   @db.VarChar
+  userId      String
+  userName    String
+  action      String
+  description String
+  timestamp   DateTime? @default(now())
+
+  company     Company?  @relation(fields: [companyId], references: [id])
+
+  @@map("activity_logs")
+}
+
+model TeamMember {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar
+  name       String
+  email      String    @unique
+  role       String
+  department String?
+  joinedAt   DateTime? @default(now())
+
+  @@map("team_members")
+}
