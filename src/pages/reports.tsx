@@ -428,7 +428,7 @@ export default function Reports() {
                 <div className="p-4 border border-border rounded-lg">
                   <h4 className="font-medium mb-2">Edge Computing Advantage</h4>
                   <p className="text-sm text-muted-foreground">
-                    Dell's edge computing infrastructure provides significant advantages in 73% of identified opportunities, 
+                    Dell&apos;s edge computing infrastructure provides significant advantages in 73% of identified opportunities, 
                     particularly in manufacturing and automotive sectors where real-time processing is critical.
                   </p>
                 </div>
@@ -442,7 +442,7 @@ export default function Reports() {
                 <div className="p-4 border border-border rounded-lg">
                   <h4 className="font-medium mb-2">Hybrid Cloud Integration</h4>
                   <p className="text-sm text-muted-foreground">
-                    Dell's hybrid cloud solutions address 89% of customer concerns about data sovereignty 
+                    Dell&apos;s hybrid cloud solutions address 89% of customer concerns about data sovereignty 
                     and regulatory compliance, particularly important for European partners.
                   </p>
                 </div>

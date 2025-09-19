@@ -82,7 +82,7 @@ export default function CompanyForm({ isOpen, onClose }: CompanyFormProps) {
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to create company: " + (error as Error).message,
+        description: "Failed to create company: " + (error as unknown as Error).message,
         variant: "destructive",
       });
     },

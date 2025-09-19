@@ -404,7 +404,7 @@ export default function CompanyModal({ company, isOpen, onClose }: CompanyModalP
                   </Card>
                 ) : (
                   <Card className="p-6">
-                    <p className="text-muted-foreground">No digital twin strategy analysis available. Click "Generate AI Analysis" to create one or "Edit Manually" to add your own.</p>
+                    <p className="text-muted-foreground">No digital twin strategy analysis available. Click &quot;Generate AI Analysis&quot; to create one or &quot;Edit Manually&quot; to add your own.</p>
                   </Card>
                 )}
               </TabsContent>
@@ -485,7 +485,7 @@ export default function CompanyModal({ company, isOpen, onClose }: CompanyModalP
                   </Card>
                 ) : (
                   <Card className="p-6">
-                    <p className="text-muted-foreground">No Dell opportunity assessment available. Click "Generate AI Assessment" to create one or "Edit Manually" to add your own.</p>
+                    <p className="text-muted-foreground">No Dell opportunity assessment available. Click &quot;Generate AI Assessment&quot; to create one or &quot;Edit Manually&quot; to add your own.</p>
                   </Card>
                 )}
               </TabsContent>
@@ -566,7 +566,7 @@ export default function CompanyModal({ company, isOpen, onClose }: CompanyModalP
                   </Card>
                 ) : (
                   <Card className="p-6">
-                    <p className="text-muted-foreground">No competitive analysis available. Click "Generate AI Analysis" to create one or "Edit Manually" to add your own.</p>
+                    <p className="text-muted-foreground">No competitive analysis available. Click &quot;Generate AI Analysis&quot; to create one or &quot;Edit Manually&quot; to add your own.</p>
                   </Card>
                 )}
               </TabsContent>

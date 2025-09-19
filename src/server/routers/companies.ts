@@ -133,7 +133,20 @@ export const companiesRouter = router({
       industry: z.string()
     }))
     .mutation(async ({ ctx, input }) => {
-      const analysis = await generateCompetitiveAnalysis(input.companyName, input.industry);
+      // First get the company to access digitalTwinStatus
+      const existingCompany = await ctx.prisma.company.findUnique({
+        where: { id: input.id }
+      });
+
+      if (!existingCompany) {
+        throw new Error('Company not found');
+      }
+
+      const analysis = await generateCompetitiveAnalysis(
+        input.companyName,
+        input.industry,
+        existingCompany.digitalTwinStatus
+      );
 
       const company = await ctx.prisma.company.update({
         where: { id: input.id },
@@ -161,11 +174,25 @@ export const companiesRouter = router({
       industry: z.string()
     }))
     .mutation(async ({ ctx, input }) => {
-      const assessment = await generateOpportunityAssessment(input.companyName, input.industry);
+      // First get the company to access revenue and digitalTwinMaturity
+      const existingCompany = await ctx.prisma.company.findUnique({
+        where: { id: input.id }
+      });
+
+      if (!existingCompany) {
+        throw new Error('Company not found');
+      }
+
+      const assessment = await generateOpportunityAssessment(
+        input.companyName,
+        input.industry,
+        existingCompany.revenue || '0',
+        existingCompany.digitalTwinMaturity || 0
+      );
 
       const company = await ctx.prisma.company.update({
         where: { id: input.id },
-        data: { dellOpportunity: assessment },
+        data: { dellOpportunity: assessment.assessmentNotes },
         include: { activityLogs: true },
       });
 

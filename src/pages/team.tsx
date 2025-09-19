@@ -80,7 +80,7 @@ export default function Team() {
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to add team member: " + (error as Error).message,
+        description: "Failed to add team member: " + (error as unknown as Error).message,
         variant: "destructive",
       });
     },
@@ -385,7 +385,7 @@ export default function Team() {
                         </h4>
                         <p className="text-sm text-muted-foreground mb-2">{member.role}</p>
                         
-                        <Badge className={getRoleColor(member.role)} size="sm">
+                        <Badge className={getRoleColor(member.role)}>
                           {member.department}
                         </Badge>
                         

@@ -38,11 +38,14 @@ export default function Dashboard() {
         return acc;
       }, {} as Record<string, number>);
 
+      const totalRevenue = data.reduce((sum, c) => sum + (parseFloat(c.estimatedDealValue || '0') || 0), 0);
+      const highOpportunityCount = data.filter(c => c.opportunityScore >= 80).length;
+
       return {
-        totalCompanies: total,
-        activeDeals: byStatus.active || 0,
-        avgOpportunityScore: total > 0 ? Math.round(data.reduce((sum, c) => sum + c.opportunityScore, 0) / total) : 0,
-        totalRevenue: data.reduce((sum, c) => sum + (parseFloat(c.estimatedDealValue || '0') || 0), 0),
+        totalPartners: total,
+        activeProjects: byStatus.active || 0,
+        highOpportunityCount: highOpportunityCount,
+        pipelineValue: `$${(totalRevenue / 1000000).toFixed(1)}M`,
       };
     }
   });

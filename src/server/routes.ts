@@ -3,19 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertCompanySchema, insertActivityLogSchema, insertTeamMemberSchema } from "@shared/schema";
 import { generateCompetitiveAnalysis, generateOpportunityAssessment, generateDigitalTwinStrategy } from "./openai";
-import * as trpcExpress from '@trpc/server/adapters/express';
-import { appRouter } from './routers/_app';
-import { createTRPCContext } from './trpc';
-
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Set up tRPC middleware
-  app.use(
-    '/api/trpc',
-    trpcExpress.createExpressMiddleware({
-      router: appRouter,
-      createContext: createTRPCContext,
-    })
-  );
+  // Note: tRPC is handled by Next.js API routes, not Express middleware
 
   // Companies
   app.get("/api/companies", async (req, res) => {

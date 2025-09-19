@@ -154,10 +154,28 @@ export class MemStorage implements IStorage {
 
   async createCompany(insertCompany: InsertCompany): Promise<Company> {
     const id = randomUUID();
-    const company: Company = { 
-      ...insertCompany, 
+    const company: Company = {
       id,
-      lastUpdated: new Date()
+      name: insertCompany.name,
+      industry: insertCompany.industry,
+      country: insertCompany.country,
+      employees: insertCompany.employees ?? null,
+      revenue: insertCompany.revenue ?? null,
+      headquarters: insertCompany.headquarters ?? null,
+      ceo: insertCompany.ceo ?? null,
+      founded: insertCompany.founded ?? null,
+      website: insertCompany.website ?? null,
+      businessAreas: (insertCompany.businessAreas as string[]) ?? [],
+      digitalTwinStatus: insertCompany.digitalTwinStatus ?? "not_started",
+      digitalTwinMaturity: insertCompany.digitalTwinMaturity ?? 0,
+      opportunityScore: insertCompany.opportunityScore ?? 0,
+      estimatedDealValue: insertCompany.estimatedDealValue ?? null,
+      lastUpdated: new Date(),
+      nextFollowUp: insertCompany.nextFollowUp ?? null,
+      notes: insertCompany.notes ?? null,
+      competitiveAnalysis: insertCompany.competitiveAnalysis ?? null,
+      dellOpportunity: insertCompany.dellOpportunity ?? null,
+      digitalTwinStrategy: insertCompany.digitalTwinStrategy ?? null,
     };
     this.companies.set(id, company);
     return company;
@@ -172,6 +190,7 @@ export class MemStorage implements IStorage {
     const updatedCompany: Company = {
       ...existingCompany,
       ...updates,
+      businessAreas: updates.businessAreas ? (updates.businessAreas as string[]) : existingCompany.businessAreas,
       lastUpdated: new Date()
     };
     this.companies.set(id, updatedCompany);
@@ -243,8 +262,12 @@ export class MemStorage implements IStorage {
   async createActivityLog(insertLog: InsertActivityLog): Promise<ActivityLog> {
     const id = randomUUID();
     const log: ActivityLog = {
-      ...insertLog,
       id,
+      action: insertLog.action,
+      description: insertLog.description,
+      userId: insertLog.userId,
+      userName: insertLog.userName,
+      companyId: insertLog.companyId ?? null,
       timestamp: new Date()
     };
     this.activityLogs.set(id, log);
@@ -258,8 +281,11 @@ export class MemStorage implements IStorage {
   async createTeamMember(insertMember: InsertTeamMember): Promise<TeamMember> {
     const id = randomUUID();
     const member: TeamMember = {
-      ...insertMember,
       id,
+      role: insertMember.role,
+      name: insertMember.name,
+      email: insertMember.email,
+      department: insertMember.department ?? null,
       joinedAt: new Date()
     };
     this.teamMembers.set(id, member);

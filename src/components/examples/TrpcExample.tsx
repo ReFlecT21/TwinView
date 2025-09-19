@@ -1,6 +1,8 @@
 import { trpc } from '../../lib/trpc';
 
 export function TrpcExample() {
+  const utils = trpc.useUtils();
+
   // Use tRPC to fetch companies
   const { data: companies, isLoading, error } = trpc.companies.getAll.useQuery();
 
@@ -8,7 +10,7 @@ export function TrpcExample() {
   const createCompanyMutation = trpc.companies.create.useMutation({
     onSuccess: () => {
       // Invalidate and refetch companies
-      trpc.companies.getAll.invalidate();
+      utils.companies.getAll.invalidate();
     },
   });
 
@@ -32,10 +34,10 @@ export function TrpcExample() {
 
       <button
         onClick={handleCreateCompany}
-        disabled={createCompanyMutation.isLoading}
+        disabled={createCompanyMutation.isPending}
         className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
       >
-        {createCompanyMutation.isLoading ? 'Creating...' : 'Create Example Company'}
+        {createCompanyMutation.isPending ? 'Creating...' : 'Create Example Company'}
       </button>
 
       <div>

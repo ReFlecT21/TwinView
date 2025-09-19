@@ -34,25 +34,28 @@ export default function Dashboard() {
   // Note: Analytics endpoint needs to be created in tRPC
   const { data: analytics, isLoading: analyticsLoading } = trpc.companies.getAll.useQuery({}, {
     select: (data) => {
-      // Calculate analytics from companies data - access the json property
-      const companiesArray = data?.json || [];
+      // Calculate analytics from companies data
+      const companiesArray = data || [];
       const total = companiesArray.length;
       const byStatus = companiesArray.reduce((acc, company) => {
         acc[company.digitalTwinStatus] = (acc[company.digitalTwinStatus] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
+      const totalRevenue = companiesArray.reduce((sum, c) => sum + (parseFloat(c.estimatedDealValue || '0') || 0), 0);
+      const highOpportunityCount = companiesArray.filter(c => c.opportunityScore >= 80).length;
+
       return {
-        totalCompanies: total,
-        activeDeals: byStatus.active || 0,
-        avgOpportunityScore: total > 0 ? Math.round(companiesArray.reduce((sum, c) => sum + c.opportunityScore, 0) / total) : 0,
-        totalRevenue: companiesArray.reduce((sum, c) => sum + (parseFloat(c.estimatedDealValue || '0') || 0), 0),
+        totalPartners: total,
+        activeProjects: byStatus.active || 0,
+        highOpportunityCount: highOpportunityCount,
+        pipelineValue: `$${(totalRevenue / 1000000).toFixed(1)}M`,
       };
     }
   });
 
   const { data: activitiesData, isLoading: activitiesLoading } = trpc.activityLogs.getAll.useQuery();
-  const activities = activitiesData?.json || [];
+  const activities = activitiesData || [];
 
   const handleCompanyClick = (company: Company) => {
     setSelectedCompany(company);
@@ -110,13 +113,13 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" data-testid="company-grid">
-            {!companies?.json || companies.json.length === 0 ? (
+            {!companies || companies.length === 0 ? (
               <div className="col-span-full text-center py-12">
                 <p className="text-muted-foreground text-lg">No companies found matching your criteria.</p>
                 <p className="text-muted-foreground text-sm mt-2">Try adjusting your filters or add a new company.</p>
               </div>
             ) : (
-              (companies.json || []).map((company: Company) => (
+              (companies || []).map((company: Company) => (
                 <CompanyCard
                   key={company.id}
                   company={company}
