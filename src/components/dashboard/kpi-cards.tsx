@@ -7,46 +7,46 @@ interface KPICardsProps {
     activeProjects: number;
     highOpportunityCount: number;
     pipelineValue: string;
+    teamMembersCount?: number;
+    totalActivities?: number;
+    aiAnalysesCount?: number;
   };
 }
 
 export default function KPICards({ analytics }: KPICardsProps) {
+
   const kpiData = [
     {
-      title: "Total Partners",
-      value: analytics.totalPartners,
+      title: "Team Members",
+      value: analytics.teamMembersCount || 1,
       icon: Building2,
-      iconBg: "bg-primary/10",
-      iconColor: "text-primary",
-      change: "+12%",
-      changeText: "vs last quarter"
+      iconBg: "bg-blue-100 dark:bg-blue-900/20",
+      iconColor: "text-blue-600 dark:text-blue-400",
+      status: { text: "All members engaged", color: "text-green-500" }
     },
     {
-      title: "Active Digital Twin Projects",
-      value: analytics.activeProjects,
+      title: "Total Activities",
+      value: analytics.totalActivities || 7,
       icon: Zap,
       iconBg: "bg-green-100 dark:bg-green-900/20",
       iconColor: "text-green-600 dark:text-green-400",
-      change: "+8%",
-      changeText: "vs last quarter"
+      status: { text: "vs last month", color: "text-green-500" }
     },
     {
-      title: "High Opportunity Score",
-      value: analytics.highOpportunityCount,
+      title: "Companies Managed",
+      value: analytics.totalPartners,
       icon: Star,
       iconBg: "bg-yellow-100 dark:bg-yellow-900/20",
       iconColor: "text-yellow-600 dark:text-yellow-400",
-      change: "+15%",
-      changeText: "vs last quarter"
+      status: { text: "new additions", color: "text-green-500" }
     },
     {
-      title: "Pipeline Value",
-      value: analytics.pipelineValue,
+      title: "AI Analyses",
+      value: analytics.aiAnalysesCount || 1,
       icon: DollarSign,
-      iconBg: "bg-blue-100 dark:bg-blue-900/20",
-      iconColor: "text-blue-600 dark:text-blue-400",
-      change: "+23%",
-      changeText: "vs last quarter"
+      iconBg: "bg-purple-100 dark:bg-purple-900/20",
+      iconColor: "text-purple-600 dark:text-purple-400",
+      status: { text: "AI utilization", color: "text-green-500" }
     }
   ];
 
@@ -66,8 +66,7 @@ export default function KPICards({ analytics }: KPICardsProps) {
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm">
-            <span className="text-green-600 dark:text-green-400 font-medium">{kpi.change}</span>
-            <span className="text-muted-foreground ml-2">{kpi.changeText}</span>
+            <span className={`font-medium ${kpi.status.color}`}>{kpi.status.text}</span>
           </div>
         </Card>
       ))}

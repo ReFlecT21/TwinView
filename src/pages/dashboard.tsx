@@ -1,18 +1,17 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/router";
 import Header from "@/components/layout/header";
 import KPICards from "@/components/dashboard/kpi-cards";
 import FiltersSection from "@/components/dashboard/filters-section";
 import CompanyCard from "@/components/dashboard/company-card";
 import ActivityFeed from "@/components/dashboard/activity-feed";
-import CompanyModal from "@/components/company/company-modal";
 import CompanyForm from "@/components/company/company-form";
 import { Company } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc";
 
 export default function Dashboard() {
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
+  const router = useRouter();
   const [isCompanyFormOpen, setIsCompanyFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndustry, setSelectedIndustry] = useState("All Industries");
@@ -27,34 +26,35 @@ export default function Dashboard() {
   };
 
   const { data: companies = [], isLoading: companiesLoading } = trpc.companies.getAll.useQuery(queryInput);
-
-  // Note: Analytics endpoint needs to be created in tRPC
-  const { data: analytics, isLoading: analyticsLoading } = trpc.companies.getAll.useQuery({}, {
-    select: (data) => {
-      // Calculate analytics from companies data
-      const total = data.length;
-      const byStatus = data.reduce((acc, company) => {
-        acc[company.digitalTwinStatus] = (acc[company.digitalTwinStatus] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const totalRevenue = data.reduce((sum, c) => sum + (parseFloat(c.estimatedDealValue || '0') || 0), 0);
-      const highOpportunityCount = data.filter(c => c.opportunityScore >= 80).length;
-
-      return {
-        totalPartners: total,
-        activeProjects: byStatus.active || 0,
-        highOpportunityCount: highOpportunityCount,
-        pipelineValue: `$${(totalRevenue / 1000000).toFixed(1)}M`,
-      };
-    }
-  });
-
   const { data: activities = [], isLoading: activitiesLoading } = trpc.activityLogs.getAll.useQuery();
+  const { data: teamMembers = [], isLoading: teamMembersLoading } = trpc.teamMembers.getAll.useQuery();
+
+  // Calculate analytics from all data
+  const analytics = React.useMemo(() => {
+    const total = companies.length;
+    const byStatus = companies.reduce((acc, company) => {
+      acc[company.digitalTwinStatus] = (acc[company.digitalTwinStatus] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const totalRevenue = companies.reduce((sum, c) => sum + (parseFloat(c.estimatedDealValue || '0') || 0), 0);
+    const highOpportunityCount = companies.filter(c => c.opportunityScore >= 80).length;
+
+    return {
+      totalPartners: total,
+      activeProjects: byStatus.active || 0,
+      highOpportunityCount: highOpportunityCount,
+      pipelineValue: `$${(totalRevenue / 1000000).toFixed(1)}M`,
+      teamMembersCount: teamMembers.length,
+      totalActivities: activities.length,
+      aiAnalysesCount: activities.filter(activity => activity.action === 'ai_analysis_generated').length,
+    };
+  }, [companies, teamMembers, activities]);
+
+  const analyticsLoading = companiesLoading || activitiesLoading || teamMembersLoading;
 
   const handleCompanyClick = (company: Company) => {
-    setSelectedCompany(company);
-    setIsCompanyModalOpen(true);
+    router.push(`/company/${company.id}`);
   };
 
   const handleAddCompany = () => {
@@ -134,15 +134,6 @@ export default function Dashboard() {
       </div>
 
       {/* Modals */}
-      <CompanyModal
-        company={selectedCompany}
-        isOpen={isCompanyModalOpen}
-        onClose={() => {
-          setIsCompanyModalOpen(false);
-          setSelectedCompany(null);
-        }}
-      />
-
       <CompanyForm
         isOpen={isCompanyFormOpen}
         onClose={() => setIsCompanyFormOpen(false)}

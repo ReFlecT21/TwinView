@@ -6,14 +6,22 @@ interface HeaderProps {
   description: string;
   onAddCompany?: () => void;
   onExportReport?: () => void;
+  leftAction?: React.ReactNode;
 }
 
-export default function Header({ title, description, onAddCompany, onExportReport }: HeaderProps) {
+export default function Header({ title, description, onAddCompany, onExportReport, leftAction }: HeaderProps) {
   return (
     <header className="bg-card border-b border-border p-6 flex items-center justify-between">
-      <div>
-        <h2 className="text-2xl font-bold text-card-foreground">{title}</h2>
-        <p className="text-muted-foreground">{description}</p>
+      <div className="flex items-center space-x-4">
+        {leftAction && (
+          <div>
+            {leftAction}
+          </div>
+        )}
+        <div>
+          <h2 className="text-2xl font-bold text-card-foreground">{title}</h2>
+          <p className="text-muted-foreground">{description}</p>
+        </div>
       </div>
       <div className="flex items-center space-x-4">
         {onAddCompany && (

@@ -1,16 +1,15 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 import Header from "@/components/layout/header";
 import FiltersSection from "@/components/dashboard/filters-section";
 import CompanyCard from "@/components/dashboard/company-card";
-import CompanyModal from "@/components/company/company-modal";
 import CompanyForm from "@/components/company/company-form";
 import { Company } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc";
 
 export default function Companies() {
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
+  const router = useRouter();
   const [isCompanyFormOpen, setIsCompanyFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndustry, setSelectedIndustry] = useState("All Industries");
@@ -27,8 +26,7 @@ export default function Companies() {
   const { data: companies = [], isLoading } = trpc.companies.getAll.useQuery(queryInput);
 
   const handleCompanyClick = (company: Company) => {
-    setSelectedCompany(company);
-    setIsCompanyModalOpen(true);
+    router.push(`/company/${company.id}`);
   };
 
   const handleAddCompany = () => {
@@ -97,15 +95,6 @@ export default function Companies() {
       </div>
 
       {/* Modals */}
-      <CompanyModal
-        company={selectedCompany}
-        isOpen={isCompanyModalOpen}
-        onClose={() => {
-          setIsCompanyModalOpen(false);
-          setSelectedCompany(null);
-        }}
-      />
-
       <CompanyForm
         isOpen={isCompanyFormOpen}
         onClose={() => setIsCompanyFormOpen(false)}
