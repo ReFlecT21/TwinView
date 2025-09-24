@@ -25,6 +25,15 @@ export const companies = pgTable("companies", {
   competitiveAnalysis: text("competitive_analysis"),
   dellOpportunity: text("dell_opportunity"),
   digitalTwinStrategy: text("digital_twin_strategy"),
+  // Structured components data
+  painPoints: jsonb("pain_points").$type<Array<{title: string, description: string}>>().default([]),
+  dellSolutions: jsonb("dell_solutions").$type<Array<{title: string, description: string}>>().default([]),
+  nextSteps: jsonb("next_steps").$type<Array<{title: string, description: string}>>().default([]),
+  competitors: jsonb("competitors").$type<Array<{title: string, description: string}>>().default([]),
+  dellAdvantages: jsonb("dell_advantages").$type<Array<{title: string, description: string}>>().default([]),
+  threats: jsonb("threats").$type<Array<{title: string, description: string}>>().default([]),
+  differentiation: jsonb("differentiation").$type<Array<{title: string, description: string}>>().default([]),
+  winStrategy: jsonb("win_strategy").$type<Array<{title: string, description: string}>>().default([]),
 });
 
 export const activityLogs = pgTable("activity_logs", {

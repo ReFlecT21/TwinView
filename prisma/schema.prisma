@@ -32,6 +32,15 @@ model Company {
   competitiveAnalysis  String?
   dellOpportunity      String?
   digitalTwinStrategy  String?
+  // Structured components data
+  painPoints           Json     @default("[]")
+  dellSolutions        Json     @default("[]")
+  nextSteps            Json     @default("[]")
+  competitors          Json     @default("[]")
+  dellAdvantages       Json     @default("[]")
+  threats              Json     @default("[]")
+  differentiation      Json     @default("[]")
+  winStrategy          Json     @default("[]")
 
   activityLogs ActivityLog[]
 

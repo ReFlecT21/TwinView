@@ -13,14 +13,23 @@ const createCompanySchema = z.object({
   founded: z.number().optional(),
   website: z.string().optional(),
   businessAreas: z.array(z.string()).default([]),
-  digitalTwinStatus: z.string().default('not_started'),
-  digitalTwinMaturity: z.number().default(0),
+  digitalTwinStatus: z.enum(['not_started', 'researching', 'implementing', 'completed']).default('not_started'),
+  digitalTwinMaturity: z.number().min(0).max(100).default(0),
   opportunityScore: z.number().default(0),
   estimatedDealValue: z.string().optional(),
   notes: z.string().optional(),
   competitiveAnalysis: z.string().optional(),
   dellOpportunity: z.string().optional(),
   digitalTwinStrategy: z.string().optional(),
+  // Structured components
+  painPoints: z.array(z.object({title: z.string(), description: z.string()})).default([]),
+  dellSolutions: z.array(z.object({title: z.string(), description: z.string()})).default([]),
+  nextSteps: z.array(z.object({title: z.string(), description: z.string()})).default([]),
+  competitors: z.array(z.object({title: z.string(), description: z.string()})).default([]),
+  dellAdvantages: z.array(z.object({title: z.string(), description: z.string()})).default([]),
+  threats: z.array(z.object({title: z.string(), description: z.string()})).default([]),
+  differentiation: z.array(z.object({title: z.string(), description: z.string()})).default([]),
+  winStrategy: z.array(z.object({title: z.string(), description: z.string()})).default([]),
 });
 
 export const companiesRouter = router({
