@@ -25,7 +25,7 @@ export default function Companies() {
 
   const { data: companies = [], isLoading } = trpc.companies.getAll.useQuery(queryInput);
 
-  const handleCompanyClick = (company: Company) => {
+  const handleCompanyClick = (company: any) => {
     router.push(`/company/${company.id}`);
   };
 
@@ -82,10 +82,10 @@ export default function Companies() {
                 <p className="text-muted-foreground text-sm mt-2">Try adjusting your filters or add a new company.</p>
               </div>
             ) : (
-              companies.map((company: Company) => (
+              companies.map((company) => (
                 <CompanyCard
                   key={company.id}
-                  company={company}
+                  company={company as any}
                   onClick={() => handleCompanyClick(company)}
                 />
               ))

@@ -138,7 +138,7 @@ export class MemStorage implements IStorage {
         id,
         ...company,
         lastUpdated: new Date()
-      });
+      } as Company);
     });
   }
 
@@ -176,6 +176,15 @@ export class MemStorage implements IStorage {
       competitiveAnalysis: insertCompany.competitiveAnalysis ?? null,
       dellOpportunity: insertCompany.dellOpportunity ?? null,
       digitalTwinStrategy: insertCompany.digitalTwinStrategy ?? null,
+      // Add the new JSON fields with proper defaults
+      painPoints: null,
+      dellSolutions: null,
+      nextSteps: null,
+      competitors: null,
+      dellAdvantages: null,
+      threats: null,
+      differentiation: null,
+      winStrategy: null,
     };
     this.companies.set(id, company);
     return company;
@@ -187,12 +196,12 @@ export class MemStorage implements IStorage {
       throw new Error("Company not found");
     }
     
-    const updatedCompany: Company = {
+    const updatedCompany = {
       ...existingCompany,
       ...updates,
       businessAreas: updates.businessAreas ? (updates.businessAreas as string[]) : existingCompany.businessAreas,
       lastUpdated: new Date()
-    };
+    } as Company;
     this.companies.set(id, updatedCompany);
     return updatedCompany;
   }

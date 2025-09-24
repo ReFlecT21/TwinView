@@ -231,7 +231,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update company with generated strategy
       await storage.updateCompany(req.params.id, {
-        digitalTwinStrategy: strategy
+        digitalTwinStrategy: strategy.strategyAnalysis,
+        digitalTwinMaturity: strategy.maturityScore,
+        digitalTwinStatus: strategy.status,
+        businessAreas: strategy.keyInitiatives,
+        notes: JSON.stringify(strategy.recommendations)
       });
 
       // Log activity

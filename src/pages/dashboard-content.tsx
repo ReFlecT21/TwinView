@@ -117,11 +117,11 @@ export default function Dashboard() {
                 <p className="text-muted-foreground text-sm mt-2">Try adjusting your filters or add a new company.</p>
               </div>
             ) : (
-              (companies || []).map((company: Company) => (
+              (companies || []).map((company) => (
                 <CompanyCard
                   key={company.id}
-                  company={company}
-                  onClick={() => handleCompanyClick(company)}
+                  company={company as any}
+                  onClick={() => handleCompanyClick(company as any)}
                 />
               ))
             )}

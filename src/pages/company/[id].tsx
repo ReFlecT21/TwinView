@@ -265,7 +265,11 @@ export default function CompanyDetailsPage() {
       });
       setEditableBusinessAreas(company.businessAreas || []);
       setEditableMaturity(company.digitalTwinMaturity || 0);
-      setEditableStatus(company.digitalTwinStatus || "not_started");
+      const validStatuses = ["not_started", "researching", "implementing", "completed"];
+      const statusValue = company.digitalTwinStatus && validStatuses.includes(company.digitalTwinStatus)
+        ? company.digitalTwinStatus
+        : "not_started";
+      setEditableStatus(statusValue);
       setEditableKeyInitiatives(company.businessAreas || []);
 
       // Try to parse recommendations from notes field, fallback to defaults
@@ -294,45 +298,69 @@ export default function CompanyDetailsPage() {
       setEditableRecommendations(recommendations);
 
       // Initialize structured components data from database or defaults
-      setEditablePainPoints(company.painPoints || [
-        { title: "Digital Twin Gap", description: "0% maturity - room for improvement" },
-        { title: "Industry Challenges", description: "Technology sector needs" }
-      ]);
-      setEditableDellSolutions(company.dellSolutions || [
-        { title: "Infrastructure", description: "PowerEdge servers & storage" },
-        { title: "Edge Computing", description: "Real-time processing solutions" },
-        { title: "Professional Services", description: "Implementation & consulting" }
-      ]);
-      setEditableNextSteps(company.nextSteps || [
-        { title: "1. Discovery Call", description: "Assess current state" },
-        { title: "2. ROI Analysis", description: "Quantify the opportunity" },
-        { title: "3. Proposal", description: "Tailored solution design" }
-      ]);
-      setEditableCompetitors(company.competitors || [
-        { title: "AWS IoT TwinMaker", description: "Cloud-native platform" },
-        { title: "Microsoft Azure Digital Twins", description: "Enterprise integration" },
-        { title: "Siemens MindSphere", description: "Industrial IoT focus" }
-      ]);
-      setEditableDellAdvantages(company.dellAdvantages || [
-        { title: "Edge-to-Cloud", description: "Integrated infrastructure" },
-        { title: "Partner Ecosystem", description: "Proven collaborations" },
-        { title: "Professional Services", description: "Implementation support" }
-      ]);
-      setEditableThreats(company.threats || [
-        { title: "Cloud-First Preference", description: "Customer bias toward cloud" },
-        { title: "Existing Relationships", description: "Incumbent partnerships" },
-        { title: "Budget Constraints", description: "Economic downturn" }
-      ]);
-      setEditableDifferentiation(company.differentiation || [
-        { title: "Hybrid Architecture", description: "Edge + cloud flexibility" },
-        { title: "Industry Expertise", description: "Technology specialization" },
-        { title: "TCO Advantage", description: "Cost-effective scaling" }
-      ]);
-      setEditableWinStrategy(company.winStrategy || [
-        { title: "1. Pilot Program", description: "Low-risk proof of concept" },
-        { title: "2. ROI Demonstration", description: "Quantified business value" },
-        { title: "3. Partnership Approach", description: "Long-term relationship focus" }
-      ]);
+      const painPointsData = Array.isArray(company.painPoints)
+        ? company.painPoints as Array<{title: string; description: string}>
+        : [
+            { title: "Digital Twin Gap", description: "0% maturity - room for improvement" },
+            { title: "Industry Challenges", description: "Technology sector needs" }
+          ];
+      setEditablePainPoints(painPointsData);
+      const dellSolutionsData = Array.isArray(company.dellSolutions)
+        ? company.dellSolutions as Array<{title: string; description: string}>
+        : [
+            { title: "Infrastructure", description: "PowerEdge servers & storage" },
+            { title: "Edge Computing", description: "Real-time processing solutions" },
+            { title: "Professional Services", description: "Implementation & consulting" }
+          ];
+      setEditableDellSolutions(dellSolutionsData);
+      const nextStepsData = Array.isArray(company.nextSteps)
+        ? company.nextSteps as Array<{title: string; description: string}>
+        : [
+            { title: "1. Discovery Call", description: "Assess current state" },
+            { title: "2. ROI Analysis", description: "Quantify the opportunity" },
+            { title: "3. Proposal", description: "Tailored solution design" }
+          ];
+      setEditableNextSteps(nextStepsData);
+      const competitorsData = Array.isArray(company.competitors)
+        ? company.competitors as Array<{title: string; description: string}>
+        : [
+            { title: "AWS IoT TwinMaker", description: "Cloud-native platform" },
+            { title: "Microsoft Azure Digital Twins", description: "Enterprise integration" },
+            { title: "Siemens MindSphere", description: "Industrial IoT focus" }
+          ];
+      setEditableCompetitors(competitorsData);
+      const dellAdvantagesData = Array.isArray(company.dellAdvantages)
+        ? company.dellAdvantages as Array<{title: string; description: string}>
+        : [
+            { title: "Edge-to-Cloud", description: "Integrated infrastructure" },
+            { title: "Partner Ecosystem", description: "Proven collaborations" },
+            { title: "Professional Services", description: "Implementation support" }
+          ];
+      setEditableDellAdvantages(dellAdvantagesData);
+      const threatsData = Array.isArray(company.threats)
+        ? company.threats as Array<{title: string; description: string}>
+        : [
+            { title: "Cloud-First Preference", description: "Customer bias toward cloud" },
+            { title: "Existing Relationships", description: "Incumbent partnerships" },
+            { title: "Budget Constraints", description: "Economic downturn" }
+          ];
+      setEditableThreats(threatsData);
+      const differentiationData = Array.isArray(company.differentiation)
+        ? company.differentiation as Array<{title: string; description: string}>
+        : [
+            { title: "Hybrid Architecture", description: "Edge + cloud flexibility" },
+            { title: "Industry Expertise", description: "Technology specialization" },
+            { title: "TCO Advantage", description: "Cost-effective scaling" }
+          ];
+      setEditableDifferentiation(differentiationData);
+      const winStrategyData = Array.isArray(company.winStrategy)
+        ? company.winStrategy as Array<{title: string; description: string}>
+        : [
+            { title: "1. Pilot Program", description: "Low-risk proof of concept" },
+            { title: "2. ROI Demonstration", description: "Quantified business value" },
+            { title: "3. Partnership Approach", description: "Long-term relationship focus" }
+          ];
+      setEditableWinStrategy(winStrategyData);
     }
   }, [company]);
 
@@ -417,8 +445,8 @@ export default function CompanyDetailsPage() {
     const status = String(editableStatus).toLowerCase();
 
     // Validate status value
-    const validStatuses = ["not_started", "researching", "implementing", "completed"];
-    const finalStatus = validStatuses.includes(status) ? status : "not_started";
+    const validStatuses = ["not_started", "researching", "implementing", "completed"] as const;
+    const finalStatus: typeof validStatuses[number] = validStatuses.includes(status as any) ? status as any : "not_started";
 
     console.log("Saving maturity and status:", {
       digitalTwinMaturity: maturity,
