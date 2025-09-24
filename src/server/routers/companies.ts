@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, publicProcedure } from '../trpc';
+import { router, publicProcedure, getCurrentUserInfo } from '../trpc';
 import { generateCompetitiveAnalysis, generateOpportunityAssessment, generateDigitalTwinStrategy } from '../openai';
 
 const createCompanySchema = z.object({
@@ -69,12 +69,15 @@ export const companiesRouter = router({
         include: { activityLogs: true },
       });
 
+      // Get current user info for activity logging
+      const userInfo = await getCurrentUserInfo(ctx);
+
       // Create activity log
       await ctx.prisma.activityLog.create({
         data: {
           companyId: company.id,
-          userId: 'system',
-          userName: 'System',
+          userId: userInfo.userId,
+          userName: userInfo.userName,
           action: 'company_created',
           description: `Added new company: ${company.name}`,
         },
@@ -99,6 +102,9 @@ export const companiesRouter = router({
         include: { activityLogs: true },
       });
 
+      // Get current user info for activity logging
+      const userInfo = await getCurrentUserInfo(ctx);
+
       // Create activity log
       const changedFields = Object.keys(input.data);
       console.log('Changed fields:', changedFields);
@@ -106,8 +112,8 @@ export const companiesRouter = router({
       await ctx.prisma.activityLog.create({
         data: {
           companyId: company.id,
-          userId: 'system',
-          userName: 'System',
+          userId: userInfo.userId,
+          userName: userInfo.userName,
           action: 'company_updated',
           description: `Updated ${changedFields.join(', ')} for ${company.name}`,
         },
@@ -154,11 +160,14 @@ export const companiesRouter = router({
         include: { activityLogs: true },
       });
 
+      // Get current user info but still show as AI System for clarity
+      const userInfo = await getCurrentUserInfo(ctx);
+
       await ctx.prisma.activityLog.create({
         data: {
           companyId: company.id,
-          userId: 'system',
-          userName: 'AI System',
+          userId: userInfo.userId,
+          userName: `AI System (requested by ${userInfo.userName})`,
           action: 'ai_analysis_generated',
           description: `Generated competitive analysis for ${company.name}`,
         },
@@ -196,11 +205,14 @@ export const companiesRouter = router({
         include: { activityLogs: true },
       });
 
+      // Get current user info but still show as AI System for clarity
+      const userInfo = await getCurrentUserInfo(ctx);
+
       await ctx.prisma.activityLog.create({
         data: {
           companyId: company.id,
-          userId: 'system',
-          userName: 'AI System',
+          userId: userInfo.userId,
+          userName: `AI System (requested by ${userInfo.userName})`,
           action: 'ai_analysis_generated',
           description: `Generated Dell opportunity assessment for ${company.name}`,
         },
@@ -233,11 +245,14 @@ export const companiesRouter = router({
         include: { activityLogs: true },
       });
 
+      // Get current user info but still show as AI System for clarity
+      const userInfo = await getCurrentUserInfo(ctx);
+
       await ctx.prisma.activityLog.create({
         data: {
           companyId: company.id,
-          userId: 'system',
-          userName: 'AI System',
+          userId: userInfo.userId,
+          userName: `AI System (requested by ${userInfo.userName})`,
           action: 'ai_analysis_generated',
           description: `Generated digital twin strategy for ${company.name}`,
         },

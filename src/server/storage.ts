@@ -282,7 +282,7 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const member: TeamMember = {
       id,
-      role: insertMember.role,
+      role: insertMember.role ?? null,
       name: insertMember.name,
       email: insertMember.email,
       department: insertMember.department ?? null,

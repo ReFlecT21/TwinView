@@ -53,10 +53,10 @@ model ActivityLog {
 }
 
 model TeamMember {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar
+  id         String    @id @db.VarChar  // This will be the Clerk user ID
   name       String
   email      String    @unique
-  role       String
+  role       String?
   department String?
   joinedAt   DateTime? @default(now())
 

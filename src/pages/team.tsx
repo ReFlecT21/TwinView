@@ -124,7 +124,11 @@ export default function Team() {
       .toUpperCase();
   };
 
-  const getRoleColor = (role: string): string => {
+  const getRoleColor = (role: string | null): string => {
+    if (!role) {
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+    }
+
     switch (role.toLowerCase()) {
       case 'senior sales engineer':
       case 'solutions architect':
@@ -383,7 +387,7 @@ export default function Team() {
                         <h4 className="font-semibold text-card-foreground" data-testid={`member-name-${member.id}`}>
                           {member.name}
                         </h4>
-                        <p className="text-sm text-muted-foreground mb-2">{member.role}</p>
+                        <p className="text-sm text-muted-foreground mb-2">{member.role || 'No role assigned'}</p>
                         
                         <Badge className={getRoleColor(member.role)}>
                           {member.department}

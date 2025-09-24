@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useUser, SignOutButton } from '@clerk/nextjs'
 import {
   Home,
   Building2,
   BarChart3,
   FileText,
-  Users
+  Users,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -20,6 +24,7 @@ const navigation = [
 export default function Sidebar() {
   const router = useRouter();
   const location = router.pathname;
+  const { user } = useUser();
 
   return (
     <aside className="w-64 bg-card border-r border-border flex-shrink-0">
@@ -55,6 +60,34 @@ export default function Sidebar() {
             );
           })}
         </nav>
+
+        {/* User Profile Section */}
+        {user && (
+          <div className="mt-auto pt-6 border-t border-border">
+            <div className="flex items-center space-x-3 mb-4">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user.imageUrl} alt={user.fullName || 'User'} />
+                <AvatarFallback>
+                  {user.firstName?.charAt(0) || user.emailAddresses[0]?.emailAddress.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-card-foreground truncate">
+                  {user.fullName || user.emailAddresses[0]?.emailAddress}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user.emailAddresses[0]?.emailAddress}
+                </p>
+              </div>
+            </div>
+            <SignOutButton>
+              <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-accent-foreground">
+                <LogOut className="w-4 h-4 mr-3" />
+                Sign Out
+              </Button>
+            </SignOutButton>
+          </div>
+        )}
       </div>
     </aside>
   );

@@ -38,10 +38,10 @@ export const activityLogs = pgTable("activity_logs", {
 });
 
 export const teamMembers = pgTable("team_members", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey(), // This will be the Clerk user ID
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  role: text("role").notNull(),
+  role: text("role"),
   department: text("department"),
   joinedAt: timestamp("joined_at").default(sql`now()`),
 });
@@ -57,7 +57,6 @@ export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
 });
 
 export const insertTeamMemberSchema = createInsertSchema(teamMembers).omit({
-  id: true,
   joinedAt: true,
 });
 
