@@ -6,9 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Company } from "@shared/schema";
-import { ArrowLeft, Loader2, Brain, Target, Kanban, Edit3, Save, FileText } from "lucide-react";
+import { ArrowLeft, Loader2, Brain, Target, Kanban, Edit3, Save, FileText, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { trpc } from "@/lib/trpc";
 
@@ -54,10 +56,85 @@ export default function CompanyDetailsPage() {
   const [isEditingOpportunity, setIsEditingOpportunity] = useState(false);
   const [isEditingCompetitive, setIsEditingCompetitive] = useState(false);
 
+  // Component editing states
+  const [isEditingCompanyData, setIsEditingCompanyData] = useState(false);
+  const [isEditingBusinessAreas, setIsEditingBusinessAreas] = useState(false);
+  const [isEditingDealValue, setIsEditingDealValue] = useState(false);
+  const [isEditingMaturity, setIsEditingMaturity] = useState(false);
+
+  // Dell Opportunity editing states
+  const [isEditingPainPoints, setIsEditingPainPoints] = useState(false);
+  const [isEditingDellSolutions, setIsEditingDellSolutions] = useState(false);
+  const [isEditingNextSteps, setIsEditingNextSteps] = useState(false);
+
+  // Competitive Analysis editing states
+  const [isEditingCompetitors, setIsEditingCompetitors] = useState(false);
+  const [isEditingDellAdvantages, setIsEditingDellAdvantages] = useState(false);
+  const [isEditingThreats, setIsEditingThreats] = useState(false);
+  const [isEditingDifferentiation, setIsEditingDifferentiation] = useState(false);
+  const [isEditingWinStrategy, setIsEditingWinStrategy] = useState(false);
+
   // Manual content states
   const [manualStrategy, setManualStrategy] = useState("");
   const [manualOpportunity, setManualOpportunity] = useState("");
   const [manualCompetitive, setManualCompetitive] = useState("");
+
+  // Editable component states
+  const [editableCompanyData, setEditableCompanyData] = useState({
+    revenue: "",
+    employees: 0,
+    headquarters: "",
+    ceo: "",
+    founded: 0,
+    website: "",
+    estimatedDealValue: ""
+  });
+  const [editableBusinessAreas, setEditableBusinessAreas] = useState<string[]>([]);
+  const [editableMaturity, setEditableMaturity] = useState(0);
+  const [editableStatus, setEditableStatus] = useState("");
+
+  // Dell Opportunity editable states
+  const [editablePainPoints, setEditablePainPoints] = useState([
+    { title: "Digital Twin Gap", description: "0% maturity - room for improvement" },
+    { title: "Industry Challenges", description: "Technology sector needs" }
+  ]);
+  const [editableDellSolutions, setEditableDellSolutions] = useState([
+    { title: "Infrastructure", description: "PowerEdge servers & storage" },
+    { title: "Edge Computing", description: "Real-time processing solutions" },
+    { title: "Professional Services", description: "Implementation & consulting" }
+  ]);
+  const [editableNextSteps, setEditableNextSteps] = useState([
+    { title: "1. Discovery Call", description: "Assess current state" },
+    { title: "2. ROI Analysis", description: "Quantify the opportunity" },
+    { title: "3. Proposal", description: "Tailored solution design" }
+  ]);
+
+  // Competitive Analysis editable states
+  const [editableCompetitors, setEditableCompetitors] = useState([
+    { title: "AWS IoT TwinMaker", description: "Cloud-native platform" },
+    { title: "Microsoft Azure Digital Twins", description: "Enterprise integration" },
+    { title: "Siemens MindSphere", description: "Industrial IoT focus" }
+  ]);
+  const [editableDellAdvantages, setEditableDellAdvantages] = useState([
+    { title: "Edge-to-Cloud", description: "Integrated infrastructure" },
+    { title: "Partner Ecosystem", description: "Vendor relationships" },
+    { title: "Professional Services", description: "Implementation support" }
+  ]);
+  const [editableThreats, setEditableThreats] = useState([
+    { title: "Cloud-First Preference", description: "Customer bias toward cloud" },
+    { title: "Existing Relationships", description: "Incumbent vendor lock-in" },
+    { title: "Budget Constraints", description: "Economic pressures" }
+  ]);
+  const [editableDifferentiation, setEditableDifferentiation] = useState([
+    { title: "Hybrid Architecture", description: "Edge + cloud flexibility" },
+    { title: "Industry Expertise", description: "Technology specialization" },
+    { title: "TCO Advantage", description: "Cost-effective scaling" }
+  ]);
+  const [editableWinStrategy, setEditableWinStrategy] = useState([
+    { title: "1. Pilot Program", description: "Low-risk proof of concept" },
+    { title: "2. ROI Demonstration", description: "Quantified business value" },
+    { title: "3. Partnership Approach", description: "Long-term relationship focus" }
+  ]);
 
   // Fetch company data
   const { data: company, isLoading, error } = trpc.companies.getById.useQuery(
@@ -71,6 +148,20 @@ export default function CompanyDetailsPage() {
       setManualStrategy(company.digitalTwinStrategy || "");
       setManualOpportunity(company.dellOpportunity || "");
       setManualCompetitive(company.competitiveAnalysis || "");
+
+      // Initialize editable component states
+      setEditableCompanyData({
+        revenue: company.revenue || "",
+        employees: company.employees || 0,
+        headquarters: company.headquarters || "",
+        ceo: company.ceo || "",
+        founded: company.founded || 0,
+        website: company.website || "",
+        estimatedDealValue: company.estimatedDealValue || ""
+      });
+      setEditableBusinessAreas(company.businessAreas || []);
+      setEditableMaturity(company.digitalTwinMaturity || 0);
+      setEditableStatus(company.digitalTwinStatus || "not_started");
     }
   }, [company]);
 
@@ -119,6 +210,84 @@ export default function CompanyDetailsPage() {
     });
     setIsEditingCompetitive(false);
   };
+
+  // Save functions for editable components
+  const saveCompanyData = () => {
+    if (!company) return;
+    updateCompanyMutation.mutate({
+      id: company.id,
+      data: {
+        revenue: editableCompanyData.revenue,
+        employees: editableCompanyData.employees,
+        headquarters: editableCompanyData.headquarters,
+        ceo: editableCompanyData.ceo,
+        founded: editableCompanyData.founded,
+        website: editableCompanyData.website,
+        estimatedDealValue: editableCompanyData.estimatedDealValue
+      }
+    });
+    setIsEditingCompanyData(false);
+  };
+
+  const saveBusinessAreas = () => {
+    if (!company) return;
+    updateCompanyMutation.mutate({
+      id: company.id,
+      data: { businessAreas: editableBusinessAreas }
+    });
+    setIsEditingBusinessAreas(false);
+  };
+
+  const saveMaturityAndStatus = () => {
+    if (!company) return;
+    updateCompanyMutation.mutate({
+      id: company.id,
+      data: {
+        digitalTwinMaturity: editableMaturity,
+        digitalTwinStatus: editableStatus
+      }
+    });
+    setIsEditingMaturity(false);
+  };
+
+  const addBusinessArea = () => {
+    setEditableBusinessAreas([...editableBusinessAreas, ""]);
+  };
+
+  const removeBusinessArea = (index: number) => {
+    setEditableBusinessAreas(editableBusinessAreas.filter((_, i) => i !== index));
+  };
+
+  const updateBusinessArea = (index: number, value: string) => {
+    const updated = [...editableBusinessAreas];
+    updated[index] = value;
+    setEditableBusinessAreas(updated);
+  };
+
+  // Helper functions for editable list sections
+  const createListHelpers = (list: any[], setList: any) => ({
+    add: () => setList([...list, { title: "", description: "" }]),
+    remove: (index: number) => setList(list.filter((_, i) => i !== index)),
+    updateTitle: (index: number, title: string) => {
+      const updated = [...list];
+      updated[index] = { ...updated[index], title };
+      setList(updated);
+    },
+    updateDescription: (index: number, description: string) => {
+      const updated = [...list];
+      updated[index] = { ...updated[index], description };
+      setList(updated);
+    }
+  });
+
+  const painPointHelpers = createListHelpers(editablePainPoints, setEditablePainPoints);
+  const dellSolutionHelpers = createListHelpers(editableDellSolutions, setEditableDellSolutions);
+  const nextStepHelpers = createListHelpers(editableNextSteps, setEditableNextSteps);
+  const competitorHelpers = createListHelpers(editableCompetitors, setEditableCompetitors);
+  const dellAdvantageHelpers = createListHelpers(editableDellAdvantages, setEditableDellAdvantages);
+  const threatHelpers = createListHelpers(editableThreats, setEditableThreats);
+  const differentiationHelpers = createListHelpers(editableDifferentiation, setEditableDifferentiation);
+  const winStrategyHelpers = createListHelpers(editableWinStrategy, setEditableWinStrategy);
 
   // AI generation mutations
   const generateCompetitiveAnalysisMutation = trpc.companies.generateCompetitiveAnalysis.useMutation({
@@ -322,68 +491,216 @@ export default function CompanyDetailsPage() {
             <TabsContent value="overview" className="space-y-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card className="p-6">
-                  <h3 className="text-xl font-semibold mb-6">Company Information</h3>
-                  <div className="space-y-4">
-                    {company.revenue && (
-                      <div className="flex justify-between items-center py-2 border-b border-border/50">
-                        <span className="text-muted-foreground">Revenue</span>
-                        <span className="font-medium text-lg">{company.revenue}</span>
-                      </div>
-                    )}
-                    {company.employees && (
-                      <div className="flex justify-between items-center py-2 border-b border-border/50">
-                        <span className="text-muted-foreground">Employees</span>
-                        <span className="font-medium text-lg">{company.employees.toLocaleString()}</span>
-                      </div>
-                    )}
-                    {company.headquarters && (
-                      <div className="flex justify-between items-center py-2 border-b border-border/50">
-                        <span className="text-muted-foreground">Headquarters</span>
-                        <span className="font-medium text-lg">{company.headquarters}</span>
-                      </div>
-                    )}
-                    {company.ceo && (
-                      <div className="flex justify-between items-center py-2 border-b border-border/50">
-                        <span className="text-muted-foreground">CEO</span>
-                        <span className="font-medium text-lg">{company.ceo}</span>
-                      </div>
-                    )}
-                    {company.founded && (
-                      <div className="flex justify-between items-center py-2 border-b border-border/50">
-                        <span className="text-muted-foreground">Founded</span>
-                        <span className="font-medium text-lg">{company.founded}</span>
-                      </div>
-                    )}
-                    {company.website && (
-                      <div className="flex justify-between items-center py-2 border-b border-border/50">
-                        <span className="text-muted-foreground">Website</span>
-                        <a
-                          href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-medium text-lg text-primary hover:underline"
-                        >
-                          {company.website}
-                        </a>
-                      </div>
-                    )}
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-semibold">Company Information</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingCompanyData(!isEditingCompanyData)}
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      {isEditingCompanyData ? 'Cancel' : 'Edit'}
+                    </Button>
                   </div>
+
+                  {isEditingCompanyData ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Revenue</label>
+                        <Input
+                          value={editableCompanyData.revenue}
+                          onChange={(e) => setEditableCompanyData({...editableCompanyData, revenue: e.target.value})}
+                          placeholder="e.g., $500M, $2.1B"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Employees</label>
+                        <Input
+                          type="number"
+                          value={editableCompanyData.employees}
+                          onChange={(e) => setEditableCompanyData({...editableCompanyData, employees: parseInt(e.target.value) || 0})}
+                          placeholder="10000"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Headquarters</label>
+                        <Input
+                          value={editableCompanyData.headquarters}
+                          onChange={(e) => setEditableCompanyData({...editableCompanyData, headquarters: e.target.value})}
+                          placeholder="City, Country"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">CEO</label>
+                        <Input
+                          value={editableCompanyData.ceo}
+                          onChange={(e) => setEditableCompanyData({...editableCompanyData, ceo: e.target.value})}
+                          placeholder="CEO Name"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Founded</label>
+                        <Input
+                          type="number"
+                          value={editableCompanyData.founded}
+                          onChange={(e) => setEditableCompanyData({...editableCompanyData, founded: parseInt(e.target.value) || 0})}
+                          placeholder="1998"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Website</label>
+                        <Input
+                          value={editableCompanyData.website}
+                          onChange={(e) => setEditableCompanyData({...editableCompanyData, website: e.target.value})}
+                          placeholder="company.com"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Estimated Deal Value</label>
+                        <Input
+                          value={editableCompanyData.estimatedDealValue}
+                          onChange={(e) => setEditableCompanyData({...editableCompanyData, estimatedDealValue: e.target.value})}
+                          placeholder="$500K, $2M"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div className="flex justify-end pt-4">
+                        <Button onClick={saveCompanyData} disabled={updateCompanyMutation.isPending}>
+                          {updateCompanyMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Save className="w-4 h-4 mr-2" />
+                          )}
+                          Save Changes
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {(company.revenue || editableCompanyData.revenue) && (
+                        <div className="flex justify-between items-center py-2 border-b border-border/50">
+                          <span className="text-muted-foreground">Revenue</span>
+                          <span className="font-medium text-lg">{company.revenue || editableCompanyData.revenue}</span>
+                        </div>
+                      )}
+                      {(company.employees || editableCompanyData.employees > 0) && (
+                        <div className="flex justify-between items-center py-2 border-b border-border/50">
+                          <span className="text-muted-foreground">Employees</span>
+                          <span className="font-medium text-lg">{(company.employees || editableCompanyData.employees).toLocaleString()}</span>
+                        </div>
+                      )}
+                      {(company.headquarters || editableCompanyData.headquarters) && (
+                        <div className="flex justify-between items-center py-2 border-b border-border/50">
+                          <span className="text-muted-foreground">Headquarters</span>
+                          <span className="font-medium text-lg">{company.headquarters || editableCompanyData.headquarters}</span>
+                        </div>
+                      )}
+                      {(company.ceo || editableCompanyData.ceo) && (
+                        <div className="flex justify-between items-center py-2 border-b border-border/50">
+                          <span className="text-muted-foreground">CEO</span>
+                          <span className="font-medium text-lg">{company.ceo || editableCompanyData.ceo}</span>
+                        </div>
+                      )}
+                      {(company.founded || editableCompanyData.founded > 0) && (
+                        <div className="flex justify-between items-center py-2 border-b border-border/50">
+                          <span className="text-muted-foreground">Founded</span>
+                          <span className="font-medium text-lg">{company.founded || editableCompanyData.founded}</span>
+                        </div>
+                      )}
+                      {(company.website || editableCompanyData.website) && (
+                        <div className="flex justify-between items-center py-2 border-b border-border/50">
+                          <span className="text-muted-foreground">Website</span>
+                          <a
+                            href={((company.website || editableCompanyData.website).startsWith('http') ? (company.website || editableCompanyData.website) : `https://${company.website || editableCompanyData.website}`)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium text-lg text-primary hover:underline"
+                          >
+                            {company.website || editableCompanyData.website}
+                          </a>
+                        </div>
+                      )}
+                      {(company.estimatedDealValue || editableCompanyData.estimatedDealValue) && (
+                        <div className="flex justify-between items-center py-2 border-b border-border/50">
+                          <span className="text-muted-foreground">Estimated Deal Value</span>
+                          <span className="font-medium text-lg text-green-600">{company.estimatedDealValue || editableCompanyData.estimatedDealValue}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </Card>
 
                 <Card className="p-6">
-                  <h3 className="text-xl font-semibold mb-6">Key Business Areas</h3>
-                  <div className="space-y-3">
-                    {company.businessAreas?.length ? (
-                      company.businessAreas.map((area, index) => (
-                        <div key={index} className="flex items-center space-x-3 p-2 rounded-lg bg-secondary/30">
-                          <div className="w-3 h-3 bg-primary rounded-full flex-shrink-0"></div>
-                          <span className="text-base">{area}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground">No business areas specified</p>
-                    )}
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-semibold">Key Business Areas</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingBusinessAreas(!isEditingBusinessAreas)}
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      {isEditingBusinessAreas ? 'Cancel' : 'Edit'}
+                    </Button>
                   </div>
+
+                  {isEditingBusinessAreas ? (
+                    <div className="space-y-4">
+                      {editableBusinessAreas.map((area, index) => (
+                        <div key={index} className="flex items-center space-x-2">
+                          <Input
+                            value={area}
+                            onChange={(e) => updateBusinessArea(index, e.target.value)}
+                            placeholder="Enter business area"
+                            className="flex-1"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeBusinessArea(index)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        onClick={addBusinessArea}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Business Area
+                      </Button>
+                      <div className="flex justify-end pt-4">
+                        <Button onClick={saveBusinessAreas} disabled={updateCompanyMutation.isPending}>
+                          {updateCompanyMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Save className="w-4 h-4 mr-2" />
+                          )}
+                          Save Changes
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {(company.businessAreas?.length || editableBusinessAreas.length) ? (
+                        (company.businessAreas || editableBusinessAreas).map((area, index) => (
+                          <div key={index} className="flex items-center space-x-3 p-2 rounded-lg bg-secondary/30">
+                            <div className="w-3 h-3 bg-primary rounded-full flex-shrink-0"></div>
+                            <span className="text-base">{area}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground">No business areas specified</p>
+                      )}
+                    </div>
+                  )}
                 </Card>
               </div>
 
@@ -423,30 +740,87 @@ export default function CompanyDetailsPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Current Status */}
                 <Card className="p-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                    Current Status
-                  </h4>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-secondary/50 rounded-lg">
-                      <div className="text-sm text-muted-foreground mb-2">Digital Twin Maturity</div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-24 bg-muted rounded-full h-3">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-lg font-semibold flex items-center">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                      Current Status
+                    </h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingMaturity(!isEditingMaturity)}
+                    >
+                      <Edit3 className="w-3 h-3 mr-2" />
+                      {isEditingMaturity ? 'Cancel' : 'Edit'}
+                    </Button>
+                  </div>
+
+                  {isEditingMaturity ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Digital Twin Maturity (%)</label>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={editableMaturity}
+                          onChange={(e) => setEditableMaturity(parseInt(e.target.value) || 0)}
+                          className="mt-1"
+                        />
+                        <div className="w-full bg-muted rounded-full h-3 mt-2">
                           <div
-                            className={`h-3 rounded-full ${getMaturityColor(company.digitalTwinMaturity)}`}
-                            style={{ width: `${company.digitalTwinMaturity}%` }}
+                            className={`h-3 rounded-full ${getMaturityColor(editableMaturity)}`}
+                            style={{ width: `${editableMaturity}%` }}
                           />
                         </div>
-                        <span className="font-semibold">{company.digitalTwinMaturity}%</span>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Implementation Status</label>
+                        <Select value={editableStatus} onValueChange={setEditableStatus}>
+                          <SelectTrigger className="mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="not_started">Not Started</SelectItem>
+                            <SelectItem value="researching">Researching</SelectItem>
+                            <SelectItem value="implementing">Implementing</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex justify-end pt-4">
+                        <Button onClick={saveMaturityAndStatus} disabled={updateCompanyMutation.isPending}>
+                          {updateCompanyMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Save className="w-4 h-4 mr-2" />
+                          )}
+                          Save Changes
+                        </Button>
                       </div>
                     </div>
-                    <div className="p-4 bg-secondary/50 rounded-lg">
-                      <div className="text-sm text-muted-foreground mb-2">Implementation Stage</div>
-                      <Badge className={statusColors[company.digitalTwinStatus as keyof typeof statusColors]}>
-                        {statusLabels[company.digitalTwinStatus as keyof typeof statusLabels]}
-                      </Badge>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-secondary/50 rounded-lg">
+                        <div className="text-sm text-muted-foreground mb-2">Digital Twin Maturity</div>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-24 bg-muted rounded-full h-3">
+                            <div
+                              className={`h-3 rounded-full ${getMaturityColor(company.digitalTwinMaturity)}`}
+                              style={{ width: `${company.digitalTwinMaturity}%` }}
+                            />
+                          </div>
+                          <span className="font-semibold">{company.digitalTwinMaturity}%</span>
+                        </div>
+                      </div>
+                      <div className="p-4 bg-secondary/50 rounded-lg">
+                        <div className="text-sm text-muted-foreground mb-2">Implementation Stage</div>
+                        <Badge className={statusColors[company.digitalTwinStatus as keyof typeof statusColors]}>
+                          {statusLabels[company.digitalTwinStatus as keyof typeof statusLabels]}
+                        </Badge>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </Card>
 
                 {/* Key Initiatives */}
@@ -615,68 +989,196 @@ export default function CompanyDetailsPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Pain Points */}
                 <Card className="p-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center">
-                    <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
-                    Pain Points
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                      <div className="text-sm font-medium text-red-800 dark:text-red-200">Digital Twin Gap</div>
-                      <div className="text-sm text-red-600 dark:text-red-300 mt-1">
-                        {company.digitalTwinMaturity}% maturity - room for improvement
-                      </div>
-                    </div>
-                    <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                      <div className="text-sm font-medium text-red-800 dark:text-red-200">Industry Challenges</div>
-                      <div className="text-sm text-red-600 dark:text-red-300 mt-1">
-                        {company.industry} sector needs
-                      </div>
-                    </div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-lg font-semibold flex items-center">
+                      <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
+                      Pain Points
+                    </h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingPainPoints(!isEditingPainPoints)}
+                    >
+                      <Edit3 className="w-3 h-3 mr-2" />
+                      {isEditingPainPoints ? 'Cancel' : 'Edit'}
+                    </Button>
                   </div>
+
+                  {isEditingPainPoints ? (
+                    <div className="space-y-4">
+                      {editablePainPoints.map((point, index) => (
+                        <div key={index} className="space-y-2 p-3 border rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              value={point.title}
+                              onChange={(e) => painPointHelpers.updateTitle(index, e.target.value)}
+                              placeholder="Pain point title"
+                              className="font-medium"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => painPointHelpers.remove(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <Input
+                            value={point.description}
+                            onChange={(e) => painPointHelpers.updateDescription(index, e.target.value)}
+                            placeholder="Description"
+                          />
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        onClick={painPointHelpers.add}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Pain Point
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {editablePainPoints.map((point, index) => (
+                        <div key={index} className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                          <div className="text-sm font-medium text-red-800 dark:text-red-200">{point.title}</div>
+                          <div className="text-sm text-red-600 dark:text-red-300 mt-1">
+                            {point.description}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
 
                 {/* Dell Solutions */}
                 <Card className="p-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                    Dell Solutions
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <div className="text-sm font-medium text-blue-800 dark:text-blue-200">Infrastructure</div>
-                      <div className="text-sm text-blue-600 dark:text-blue-300 mt-1">PowerEdge servers & storage</div>
-                    </div>
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <div className="text-sm font-medium text-blue-800 dark:text-blue-200">Edge Computing</div>
-                      <div className="text-sm text-blue-600 dark:text-blue-300 mt-1">Real-time processing solutions</div>
-                    </div>
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <div className="text-sm font-medium text-blue-800 dark:text-blue-200">Professional Services</div>
-                      <div className="text-sm text-blue-600 dark:text-blue-300 mt-1">Implementation & consulting</div>
-                    </div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-lg font-semibold flex items-center">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                      Dell Solutions
+                    </h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingDellSolutions(!isEditingDellSolutions)}
+                    >
+                      <Edit3 className="w-3 h-3 mr-2" />
+                      {isEditingDellSolutions ? 'Cancel' : 'Edit'}
+                    </Button>
                   </div>
+
+                  {isEditingDellSolutions ? (
+                    <div className="space-y-4">
+                      {editableDellSolutions.map((solution, index) => (
+                        <div key={index} className="space-y-2 p-3 border rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              value={solution.title}
+                              onChange={(e) => dellSolutionHelpers.updateTitle(index, e.target.value)}
+                              placeholder="Solution title"
+                              className="font-medium"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => dellSolutionHelpers.remove(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <Input
+                            value={solution.description}
+                            onChange={(e) => dellSolutionHelpers.updateDescription(index, e.target.value)}
+                            placeholder="Description"
+                          />
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        onClick={dellSolutionHelpers.add}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Solution
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {editableDellSolutions.map((solution, index) => (
+                        <div key={index} className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <div className="text-sm font-medium text-blue-800 dark:text-blue-200">{solution.title}</div>
+                          <div className="text-sm text-blue-600 dark:text-blue-300 mt-1">{solution.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
 
                 {/* Next Steps */}
                 <Card className="p-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center">
-                    <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-                    Next Steps
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                      <div className="text-sm font-medium text-purple-800 dark:text-purple-200">1. Discovery Call</div>
-                      <div className="text-sm text-purple-600 dark:text-purple-300 mt-1">Assess current state</div>
-                    </div>
-                    <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                      <div className="text-sm font-medium text-purple-800 dark:text-purple-200">2. ROI Analysis</div>
-                      <div className="text-sm text-purple-600 dark:text-purple-300 mt-1">Quantify the opportunity</div>
-                    </div>
-                    <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                      <div className="text-sm font-medium text-purple-800 dark:text-purple-200">3. Proposal</div>
-                      <div className="text-sm text-purple-600 dark:text-purple-300 mt-1">Tailored solution design</div>
-                    </div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-lg font-semibold flex items-center">
+                      <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                      Next Steps
+                    </h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingNextSteps(!isEditingNextSteps)}
+                    >
+                      <Edit3 className="w-3 h-3 mr-2" />
+                      {isEditingNextSteps ? 'Cancel' : 'Edit'}
+                    </Button>
                   </div>
+
+                  {isEditingNextSteps ? (
+                    <div className="space-y-4">
+                      {editableNextSteps.map((step, index) => (
+                        <div key={index} className="space-y-2 p-3 border rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              value={step.title}
+                              onChange={(e) => nextStepHelpers.updateTitle(index, e.target.value)}
+                              placeholder="Step title"
+                              className="font-medium"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => nextStepHelpers.remove(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <Input
+                            value={step.description}
+                            onChange={(e) => nextStepHelpers.updateDescription(index, e.target.value)}
+                            placeholder="Description"
+                          />
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        onClick={nextStepHelpers.add}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Step
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {editableNextSteps.map((step, index) => (
+                        <div key={index} className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                          <div className="text-sm font-medium text-purple-800 dark:text-purple-200">{step.title}</div>
+                          <div className="text-sm text-purple-600 dark:text-purple-300 mt-1">{step.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
               </div>
 
@@ -811,113 +1313,323 @@ export default function CompanyDetailsPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Key Competitors */}
                 <Card className="p-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center">
-                    <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
-                    Key Competitors
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                      <div className="text-sm font-medium text-red-800 dark:text-red-200">AWS IoT TwinMaker</div>
-                      <div className="text-sm text-red-600 dark:text-red-300 mt-1">Cloud-native platform</div>
-                    </div>
-                    <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                      <div className="text-sm font-medium text-red-800 dark:text-red-200">Microsoft Azure Digital Twins</div>
-                      <div className="text-sm text-red-600 dark:text-red-300 mt-1">Enterprise integration</div>
-                    </div>
-                    <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                      <div className="text-sm font-medium text-red-800 dark:text-red-200">Siemens MindSphere</div>
-                      <div className="text-sm text-red-600 dark:text-red-300 mt-1">Industrial IoT focus</div>
-                    </div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-lg font-semibold flex items-center">
+                      <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
+                      Key Competitors
+                    </h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingCompetitors(!isEditingCompetitors)}
+                    >
+                      <Edit3 className="w-3 h-3 mr-2" />
+                      {isEditingCompetitors ? 'Cancel' : 'Edit'}
+                    </Button>
                   </div>
+
+                  {isEditingCompetitors ? (
+                    <div className="space-y-4">
+                      {editableCompetitors.map((competitor, index) => (
+                        <div key={index} className="space-y-2 p-3 border rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              value={competitor.title}
+                              onChange={(e) => competitorHelpers.updateTitle(index, e.target.value)}
+                              placeholder="Competitor name"
+                              className="font-medium"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => competitorHelpers.remove(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <Input
+                            value={competitor.description}
+                            onChange={(e) => competitorHelpers.updateDescription(index, e.target.value)}
+                            placeholder="Key strength/focus"
+                          />
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        onClick={competitorHelpers.add}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Competitor
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {editableCompetitors.map((competitor, index) => (
+                        <div key={index} className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                          <div className="text-sm font-medium text-red-800 dark:text-red-200">{competitor.title}</div>
+                          <div className="text-sm text-red-600 dark:text-red-300 mt-1">{competitor.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
 
                 {/* Dell Advantages */}
                 <Card className="p-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center">
-                    <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                    Dell Advantages
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="text-sm font-medium text-green-800 dark:text-green-200">Edge-to-Cloud</div>
-                      <div className="text-sm text-green-600 dark:text-green-300 mt-1">Integrated infrastructure</div>
-                    </div>
-                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="text-sm font-medium text-green-800 dark:text-green-200">Partner Ecosystem</div>
-                      <div className="text-sm text-green-600 dark:text-green-300 mt-1">Vendor relationships</div>
-                    </div>
-                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="text-sm font-medium text-green-800 dark:text-green-200">Professional Services</div>
-                      <div className="text-sm text-green-600 dark:text-green-300 mt-1">Implementation support</div>
-                    </div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-lg font-semibold flex items-center">
+                      <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                      Dell Advantages
+                    </h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingDellAdvantages(!isEditingDellAdvantages)}
+                    >
+                      <Edit3 className="w-3 h-3 mr-2" />
+                      {isEditingDellAdvantages ? 'Cancel' : 'Edit'}
+                    </Button>
                   </div>
+
+                  {isEditingDellAdvantages ? (
+                    <div className="space-y-4">
+                      {editableDellAdvantages.map((advantage, index) => (
+                        <div key={index} className="space-y-2 p-3 border rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              value={advantage.title}
+                              onChange={(e) => dellAdvantageHelpers.updateTitle(index, e.target.value)}
+                              placeholder="Advantage title"
+                              className="font-medium"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => dellAdvantageHelpers.remove(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <Input
+                            value={advantage.description}
+                            onChange={(e) => dellAdvantageHelpers.updateDescription(index, e.target.value)}
+                            placeholder="Advantage description"
+                          />
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        onClick={dellAdvantageHelpers.add}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Advantage
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {editableDellAdvantages.map((advantage, index) => (
+                        <div key={index} className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                          <div className="text-sm font-medium text-green-800 dark:text-green-200">{advantage.title}</div>
+                          <div className="text-sm text-green-600 dark:text-green-300 mt-1">{advantage.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
 
                 {/* Threats & Risks */}
                 <Card className="p-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center">
-                    <div className="w-3 h-3 bg-orange-500 rounded-full mr-3"></div>
-                    Threats & Risks
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-                      <div className="text-sm font-medium text-orange-800 dark:text-orange-200">Cloud-First Preference</div>
-                      <div className="text-sm text-orange-600 dark:text-orange-300 mt-1">Customer bias toward cloud</div>
-                    </div>
-                    <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-                      <div className="text-sm font-medium text-orange-800 dark:text-orange-200">Existing Relationships</div>
-                      <div className="text-sm text-orange-600 dark:text-orange-300 mt-1">Incumbent vendor lock-in</div>
-                    </div>
-                    <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-                      <div className="text-sm font-medium text-orange-800 dark:text-orange-200">Budget Constraints</div>
-                      <div className="text-sm text-orange-600 dark:text-orange-300 mt-1">Economic pressures</div>
-                    </div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-lg font-semibold flex items-center">
+                      <div className="w-3 h-3 bg-orange-500 rounded-full mr-3"></div>
+                      Threats & Risks
+                    </h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingThreats(!isEditingThreats)}
+                    >
+                      <Edit3 className="w-3 h-3 mr-2" />
+                      {isEditingThreats ? 'Cancel' : 'Edit'}
+                    </Button>
                   </div>
+
+                  {isEditingThreats ? (
+                    <div className="space-y-4">
+                      {editableThreats.map((threat, index) => (
+                        <div key={index} className="space-y-2 p-3 border rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              value={threat.title}
+                              onChange={(e) => threatHelpers.updateTitle(index, e.target.value)}
+                              placeholder="Threat/Risk title"
+                              className="font-medium"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => threatHelpers.remove(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <Input
+                            value={threat.description}
+                            onChange={(e) => threatHelpers.updateDescription(index, e.target.value)}
+                            placeholder="Impact/Description"
+                          />
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        onClick={threatHelpers.add}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Threat
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {editableThreats.map((threat, index) => (
+                        <div key={index} className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                          <div className="text-sm font-medium text-orange-800 dark:text-orange-200">{threat.title}</div>
+                          <div className="text-sm text-orange-600 dark:text-orange-300 mt-1">{threat.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
               </div>
 
               {/* Competitive Strategy */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card className="p-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                    Differentiation Strategy
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <div className="text-sm font-medium text-blue-800 dark:text-blue-200">Hybrid Architecture</div>
-                      <div className="text-sm text-blue-600 dark:text-blue-300 mt-1">Edge + cloud flexibility</div>
-                    </div>
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <div className="text-sm font-medium text-blue-800 dark:text-blue-200">Industry Expertise</div>
-                      <div className="text-sm text-blue-600 dark:text-blue-300 mt-1">{company.industry} specialization</div>
-                    </div>
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <div className="text-sm font-medium text-blue-800 dark:text-blue-200">TCO Advantage</div>
-                      <div className="text-sm text-blue-600 dark:text-blue-300 mt-1">Cost-effective scaling</div>
-                    </div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-lg font-semibold flex items-center">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                      Differentiation Strategy
+                    </h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingDifferentiation(!isEditingDifferentiation)}
+                    >
+                      <Edit3 className="w-3 h-3 mr-2" />
+                      {isEditingDifferentiation ? 'Cancel' : 'Edit'}
+                    </Button>
                   </div>
+
+                  {isEditingDifferentiation ? (
+                    <div className="space-y-4">
+                      {editableDifferentiation.map((diff, index) => (
+                        <div key={index} className="space-y-2 p-3 border rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              value={diff.title}
+                              onChange={(e) => differentiationHelpers.updateTitle(index, e.target.value)}
+                              placeholder="Differentiation point"
+                              className="font-medium"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => differentiationHelpers.remove(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <Input
+                            value={diff.description}
+                            onChange={(e) => differentiationHelpers.updateDescription(index, e.target.value)}
+                            placeholder="Competitive advantage"
+                          />
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        onClick={differentiationHelpers.add}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Differentiator
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {editableDifferentiation.map((diff, index) => (
+                        <div key={index} className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                          <div className="text-sm font-medium text-blue-800 dark:text-blue-200">{diff.title}</div>
+                          <div className="text-sm text-blue-600 dark:text-blue-300 mt-1">{diff.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
 
                 <Card className="p-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center">
-                    <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-                    Win Strategy
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                      <div className="text-sm font-medium text-purple-800 dark:text-purple-200">1. Pilot Program</div>
-                      <div className="text-sm text-purple-600 dark:text-purple-300 mt-1">Low-risk proof of concept</div>
-                    </div>
-                    <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                      <div className="text-sm font-medium text-purple-800 dark:text-purple-200">2. ROI Demonstration</div>
-                      <div className="text-sm text-purple-600 dark:text-purple-300 mt-1">Quantified business value</div>
-                    </div>
-                    <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                      <div className="text-sm font-medium text-purple-800 dark:text-purple-200">3. Partnership Approach</div>
-                      <div className="text-sm text-purple-600 dark:text-purple-300 mt-1">Long-term relationship focus</div>
-                    </div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-lg font-semibold flex items-center">
+                      <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                      Win Strategy
+                    </h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingWinStrategy(!isEditingWinStrategy)}
+                    >
+                      <Edit3 className="w-3 h-3 mr-2" />
+                      {isEditingWinStrategy ? 'Cancel' : 'Edit'}
+                    </Button>
                   </div>
+
+                  {isEditingWinStrategy ? (
+                    <div className="space-y-4">
+                      {editableWinStrategy.map((strategy, index) => (
+                        <div key={index} className="space-y-2 p-3 border rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              value={strategy.title}
+                              onChange={(e) => winStrategyHelpers.updateTitle(index, e.target.value)}
+                              placeholder="Strategy step"
+                              className="font-medium"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => winStrategyHelpers.remove(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <Input
+                            value={strategy.description}
+                            onChange={(e) => winStrategyHelpers.updateDescription(index, e.target.value)}
+                            placeholder="Strategy description"
+                          />
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        onClick={winStrategyHelpers.add}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Strategy
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {editableWinStrategy.map((strategy, index) => (
+                        <div key={index} className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                          <div className="text-sm font-medium text-purple-800 dark:text-purple-200">{strategy.title}</div>
+                          <div className="text-sm text-purple-600 dark:text-purple-300 mt-1">{strategy.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
               </div>
 
