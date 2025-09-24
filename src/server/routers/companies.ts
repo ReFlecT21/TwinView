@@ -192,7 +192,7 @@ export const companiesRouter = router({
       industry: z.string()
     }))
     .mutation(async ({ ctx, input }) => {
-      // First get the company to access revenue and digitalTwinMaturity
+      // First get the company to access revenue, digitalTwinMaturity, and employees
       const existingCompany = await ctx.prisma.company.findUnique({
         where: { id: input.id }
       });
@@ -201,16 +201,24 @@ export const companiesRouter = router({
         throw new Error('Company not found');
       }
 
-      const assessment = await generateOpportunityAssessment(
+      const assessmentResult = await generateOpportunityAssessment(
         input.companyName,
         input.industry,
         existingCompany.revenue || '0',
-        existingCompany.digitalTwinMaturity || 0
+        existingCompany.digitalTwinMaturity || 0,
+        existingCompany.employees || undefined
       );
 
       const company = await ctx.prisma.company.update({
         where: { id: input.id },
-        data: { dellOpportunity: assessment.assessmentNotes },
+        data: {
+          dellOpportunity: assessmentResult.assessmentNotes,
+          opportunityScore: assessmentResult.opportunityScore,
+          estimatedDealValue: assessmentResult.estimatedDealValue,
+          painPoints: assessmentResult.painPoints,
+          dellSolutions: assessmentResult.dellSolutions,
+          nextSteps: assessmentResult.nextSteps
+        },
         include: { activityLogs: true },
       });
 
@@ -222,12 +230,12 @@ export const companiesRouter = router({
           companyId: company.id,
           userId: userInfo.userId,
           userName: `AI System (requested by ${userInfo.userName})`,
-          action: 'ai_analysis_generated',
-          description: `Generated Dell opportunity assessment for ${company.name}`,
+          action: 'ai_opportunity_generated',
+          description: `Generated comprehensive Dell opportunity assessment with structured data for ${company.name}`,
         },
       });
 
-      return { assessment, company };
+      return { assessment: assessmentResult, company };
     }),
 
   generateDigitalTwinStrategy: publicProcedure

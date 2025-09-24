@@ -62,24 +62,43 @@ ${result.challenges?.map((challenge: string, index: number) =>
   }
 }
 
-export async function generateOpportunityAssessment(companyName: string, industry: string, revenue: string, digitalTwinMaturity: number): Promise<{
+export async function generateOpportunityAssessment(companyName: string, industry: string, revenue: string, digitalTwinMaturity: number, employees?: number): Promise<{
   opportunityScore: number;
   assessmentNotes: string;
+  estimatedDealValue: string;
+  painPoints: Array<{title: string; description: string}>;
+  dellSolutions: Array<{title: string; description: string}>;
+  nextSteps: Array<{title: string; description: string}>;
 }> {
   try {
-    const prompt = `Assess the Dell sales opportunity for ${companyName}, a ${industry} company with revenue of ${revenue} and current digital twin maturity of ${digitalTwinMaturity}%.
+    const prompt = `Assess the comprehensive Dell sales opportunity for ${companyName}, a ${industry} company with revenue of ${revenue}, ${employees || 'unknown'} employees, and current digital twin maturity of ${digitalTwinMaturity}%.
 
-Please provide:
-1. An opportunity score from 1-100 based on their potential value as a Dell customer
-2. Detailed assessment notes explaining the scoring rationale
-3. Specific product/solution recommendations
-4. Timeline recommendations for engagement
+Provide a complete opportunity analysis including:
+1. Opportunity score (1-100) based on potential value as Dell customer
+2. Estimated deal value in USD (realistic range based on company size)
+3. Key pain points they likely face (3-5 specific challenges)
+4. Recommended Dell solutions with details (3-5 solutions)
+5. Next steps for engagement (3-5 actionable steps)
+6. Detailed assessment notes
 
 Respond in JSON format:
 {
-  "opportunityScore": number,
+  "opportunityScore": number (1-100),
+  "estimatedDealValue": "USD amount or range (e.g. '$2-5M', '$500K-1M')",
   "assessmentNotes": "detailed explanation of scoring and recommendations",
-  "productRecommendations": ["list of Dell products/solutions"],
+  "painPoints": [
+    {"title": "pain point title", "description": "detailed description of the challenge"},
+    {"title": "another pain point", "description": "detailed description"}
+  ],
+  "dellSolutions": [
+    {"title": "Dell solution name", "description": "how this solution addresses their needs"},
+    {"title": "another solution", "description": "detailed benefits"}
+  ],
+  "nextSteps": [
+    {"title": "immediate action", "description": "what to do first"},
+    {"title": "follow-up step", "description": "next action to take"}
+  ],
+  "productRecommendations": ["list of specific Dell products/solutions"],
   "timelineRecommendation": "suggested engagement timeline"
 }`;
 
@@ -88,7 +107,7 @@ Respond in JSON format:
       messages: [
         {
           role: "system",
-          content: "You are a sales opportunity assessment specialist for Dell Technologies, focused on digital twin and infrastructure solutions."
+          content: "You are a senior Dell Technologies sales opportunity analyst specializing in enterprise digital transformation and infrastructure solutions. Provide actionable, industry-specific assessments."
         },
         {
           role: "user",
@@ -99,7 +118,7 @@ Respond in JSON format:
     });
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
-    
+
     const assessmentNotes = `**Opportunity Assessment**: ${result.assessmentNotes}
 
 **Recommended Dell Solutions**:
@@ -109,7 +128,20 @@ ${result.productRecommendations?.map((product: string) => `• ${product}`).join
 
     return {
       opportunityScore: Math.max(1, Math.min(100, result.opportunityScore || 50)),
-      assessmentNotes
+      assessmentNotes,
+      estimatedDealValue: result.estimatedDealValue || 'TBD',
+      painPoints: result.painPoints || [
+        {title: "Digital Infrastructure Gap", description: "Legacy systems limiting digital transformation"},
+        {title: "Scalability Challenges", description: "Current infrastructure cannot support growth requirements"}
+      ],
+      dellSolutions: result.dellSolutions || [
+        {title: "PowerEdge Server Portfolio", description: "High-performance computing infrastructure for enterprise workloads"},
+        {title: "Storage Solutions", description: "Scalable storage systems for data-intensive applications"}
+      ],
+      nextSteps: result.nextSteps || [
+        {title: "Technical Discovery", description: "Schedule detailed technical assessment meeting"},
+        {title: "Solution Architecture", description: "Design preliminary infrastructure roadmap"}
+      ]
     };
 
   } catch (error) {

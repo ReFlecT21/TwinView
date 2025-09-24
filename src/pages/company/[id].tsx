@@ -1679,12 +1679,12 @@ export default function CompanyDetailsPage() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Opportunity Score */}
-                <Card className="p-6">
+                <Card className="p-6 h-64 flex flex-col">
                   <h4 className="text-lg font-semibold mb-4 flex items-center">
                     <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
                     Opportunity Score
                   </h4>
-                  <div className="text-center py-6">
+                  <div className="text-center py-6 flex-1 overflow-y-auto">
                     <div className="text-4xl font-bold text-yellow-600 mb-2">
                       {(company.opportunityScore / 10).toFixed(1)}/10
                     </div>
@@ -1702,12 +1702,12 @@ export default function CompanyDetailsPage() {
                 </Card>
 
                 {/* Deal Potential */}
-                <Card className="p-6">
+                <Card className="p-6 h-64 flex flex-col">
                   <h4 className="text-lg font-semibold mb-4 flex items-center">
                     <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
                     Deal Potential
                   </h4>
-                  <div className="space-y-4">
+                  <div className="space-y-4 flex-1 overflow-y-auto">
                     <div className="p-4 bg-secondary/50 rounded-lg">
                       <div className="text-sm text-muted-foreground mb-2">
                         Estimated Deal Value
@@ -1735,7 +1735,7 @@ export default function CompanyDetailsPage() {
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Pain Points */}
-                <Card className="p-6">
+                <Card className="p-6 h-96 flex flex-col">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
@@ -1819,7 +1819,7 @@ export default function CompanyDetailsPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-3 flex-1 overflow-y-auto">
                       {editablePainPoints.map((point, index) => (
                         <div
                           key={index}
@@ -1835,10 +1835,86 @@ export default function CompanyDetailsPage() {
                       ))}
                     </div>
                   )}
+
+                  {/* Pain Points Edit Modal */}
+                  <Dialog open={isEditingPainPoints} onOpenChange={setIsEditingPainPoints}>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+                      <DialogHeader>
+                        <DialogTitle>Edit Pain Points</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex-1 overflow-y-auto space-y-4 py-4">
+                        {editablePainPoints.map((point, index) => (
+                          <div
+                            key={index}
+                            className="space-y-2 p-4 border rounded-lg"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <Input
+                                value={point.title}
+                                onChange={(e) =>
+                                  painPointHelpers.updateTitle(
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Pain point title"
+                                className="font-medium"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => painPointHelpers.remove(index)}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <Textarea
+                              value={point.description}
+                              onChange={(e) =>
+                                painPointHelpers.updateDescription(
+                                  index,
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Description"
+                              rows={3}
+                            />
+                          </div>
+                        ))}
+                        <Button
+                          variant="outline"
+                          onClick={painPointHelpers.add}
+                          className="w-full"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Pain Point
+                        </Button>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsEditingPainPoints(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={savePainPoints}
+                          disabled={updateCompanyMutation.isPending}
+                        >
+                          {updateCompanyMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Save className="w-4 h-4 mr-2" />
+                          )}
+                          Save Changes
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </Card>
 
                 {/* Dell Solutions */}
-                <Card className="p-6">
+                <Card className="p-6 h-96 flex flex-col">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
@@ -1856,54 +1932,77 @@ export default function CompanyDetailsPage() {
                     </Button>
                   </div>
 
-                  {isEditingDellSolutions ? (
-                    <div className="space-y-4">
-                      {editableDellSolutions.map((solution, index) => (
-                        <div
-                          key={index}
-                          className="space-y-2 p-3 border rounded-lg"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              value={solution.title}
+                  <div className="space-y-3 flex-1 overflow-y-auto">
+                    {editableDellSolutions.map((solution, index) => (
+                      <div
+                        key={index}
+                        className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
+                      >
+                        <div className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                          {solution.title}
+                        </div>
+                        <div className="text-sm text-blue-600 dark:text-blue-300 mt-1">
+                          {solution.description}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Dell Solutions Edit Modal */}
+                  <Dialog open={isEditingDellSolutions} onOpenChange={setIsEditingDellSolutions}>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+                      <DialogHeader>
+                        <DialogTitle>Edit Dell Solutions</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex-1 overflow-y-auto space-y-4 py-4">
+                        {editableDellSolutions.map((solution, index) => (
+                          <div
+                            key={index}
+                            className="space-y-2 p-4 border rounded-lg"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <Input
+                                value={solution.title}
+                                onChange={(e) =>
+                                  dellSolutionHelpers.updateTitle(
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Solution title"
+                                className="font-medium"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => dellSolutionHelpers.remove(index)}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <Textarea
+                              value={solution.description}
                               onChange={(e) =>
-                                dellSolutionHelpers.updateTitle(
+                                dellSolutionHelpers.updateDescription(
                                   index,
                                   e.target.value
                                 )
                               }
-                              placeholder="Solution title"
-                              className="font-medium"
+                              placeholder="Description"
+                              rows={3}
                             />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => dellSolutionHelpers.remove(index)}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
                           </div>
-                          <Input
-                            value={solution.description}
-                            onChange={(e) =>
-                              dellSolutionHelpers.updateDescription(
-                                index,
-                                e.target.value
-                              )
-                            }
-                            placeholder="Description"
-                          />
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        onClick={dellSolutionHelpers.add}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Solution
-                      </Button>
-                      <div className="flex justify-end space-x-2 pt-4">
+                        ))}
+                        <Button
+                          variant="outline"
+                          onClick={dellSolutionHelpers.add}
+                          className="w-full"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Solution
+                        </Button>
+                      </div>
+                      <DialogFooter>
                         <Button
                           variant="outline"
                           onClick={() => setIsEditingDellSolutions(false)}
@@ -1916,32 +2015,18 @@ export default function CompanyDetailsPage() {
                         >
                           {updateCompanyMutation.isPending ? (
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : null}
+                          ) : (
+                            <Save className="w-4 h-4 mr-2" />
+                          )}
                           Save Changes
                         </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {editableDellSolutions.map((solution, index) => (
-                        <div
-                          key={index}
-                          className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
-                        >
-                          <div className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                            {solution.title}
-                          </div>
-                          <div className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                            {solution.description}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </Card>
 
                 {/* Next Steps */}
-                <Card className="p-6">
+                <Card className="p-6 h-96 flex flex-col">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
@@ -1957,54 +2042,77 @@ export default function CompanyDetailsPage() {
                     </Button>
                   </div>
 
-                  {isEditingNextSteps ? (
-                    <div className="space-y-4">
-                      {editableNextSteps.map((step, index) => (
-                        <div
-                          key={index}
-                          className="space-y-2 p-3 border rounded-lg"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              value={step.title}
+                  <div className="space-y-3 flex-1 overflow-y-auto">
+                    {editableNextSteps.map((step, index) => (
+                      <div
+                        key={index}
+                        className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800"
+                      >
+                        <div className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                          {step.title}
+                        </div>
+                        <div className="text-sm text-purple-600 dark:text-purple-300 mt-1">
+                          {step.description}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Next Steps Edit Modal */}
+                  <Dialog open={isEditingNextSteps} onOpenChange={setIsEditingNextSteps}>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+                      <DialogHeader>
+                        <DialogTitle>Edit Next Steps</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex-1 overflow-y-auto space-y-4 py-4">
+                        {editableNextSteps.map((step, index) => (
+                          <div
+                            key={index}
+                            className="space-y-2 p-4 border rounded-lg"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <Input
+                                value={step.title}
+                                onChange={(e) =>
+                                  nextStepHelpers.updateTitle(
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Step title"
+                                className="font-medium"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => nextStepHelpers.remove(index)}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <Textarea
+                              value={step.description}
                               onChange={(e) =>
-                                nextStepHelpers.updateTitle(
+                                nextStepHelpers.updateDescription(
                                   index,
                                   e.target.value
                                 )
                               }
-                              placeholder="Step title"
-                              className="font-medium"
+                              placeholder="Description"
+                              rows={3}
                             />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => nextStepHelpers.remove(index)}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
                           </div>
-                          <Input
-                            value={step.description}
-                            onChange={(e) =>
-                              nextStepHelpers.updateDescription(
-                                index,
-                                e.target.value
-                              )
-                            }
-                            placeholder="Description"
-                          />
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        onClick={nextStepHelpers.add}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Step
-                      </Button>
-                      <div className="flex justify-end space-x-2 pt-4">
+                        ))}
+                        <Button
+                          variant="outline"
+                          onClick={nextStepHelpers.add}
+                          className="w-full"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Step
+                        </Button>
+                      </div>
+                      <DialogFooter>
                         <Button
                           variant="outline"
                           onClick={() => setIsEditingNextSteps(false)}
@@ -2017,28 +2125,14 @@ export default function CompanyDetailsPage() {
                         >
                           {updateCompanyMutation.isPending ? (
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : null}
+                          ) : (
+                            <Save className="w-4 h-4 mr-2" />
+                          )}
                           Save Changes
                         </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {editableNextSteps.map((step, index) => (
-                        <div
-                          key={index}
-                          className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800"
-                        >
-                          <div className="text-sm font-medium text-purple-800 dark:text-purple-200">
-                            {step.title}
-                          </div>
-                          <div className="text-sm text-purple-600 dark:text-purple-300 mt-1">
-                            {step.description}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </Card>
               </div>
 
