@@ -237,20 +237,38 @@ export const companiesRouter = router({
       industry: z.string()
     }))
     .mutation(async ({ ctx, input }) => {
-      // First fetch the company to get business areas
+      // First fetch the company to get business areas and employee count
       const existingCompany = await ctx.prisma.company.findUnique({
         where: { id: input.id }
       });
 
-      const strategy = await generateDigitalTwinStrategy(
+      if (!existingCompany) {
+        throw new Error('Company not found');
+      }
+
+      const strategyResult = await generateDigitalTwinStrategy(
         input.companyName,
         input.industry,
-        existingCompany?.businessAreas || []
+        existingCompany.businessAreas || [],
+        existingCompany.employees || undefined
       );
+
+      // Create recommendations data structure for database storage
+      const recommendationsData = strategyResult.recommendations.map(rec => ({
+        title: rec.title,
+        description: rec.description
+      }));
 
       const company = await ctx.prisma.company.update({
         where: { id: input.id },
-        data: { digitalTwinStrategy: strategy },
+        data: {
+          digitalTwinStrategy: strategyResult.strategyAnalysis,
+          digitalTwinMaturity: strategyResult.maturityScore,
+          digitalTwinStatus: strategyResult.status,
+          businessAreas: strategyResult.keyInitiatives,
+          // Store recommendations in the notes field for now (could add a dedicated field later)
+          notes: JSON.stringify(recommendationsData)
+        },
         include: { activityLogs: true },
       });
 
@@ -262,11 +280,11 @@ export const companiesRouter = router({
           companyId: company.id,
           userId: userInfo.userId,
           userName: `AI System (requested by ${userInfo.userName})`,
-          action: 'ai_analysis_generated',
-          description: `Generated digital twin strategy for ${company.name}`,
+          action: 'ai_strategy_generated',
+          description: `Generated comprehensive digital twin strategy with structured data for ${company.name}`,
         },
       });
 
-      return { strategy, company };
+      return { strategy: strategyResult, company };
     }),
 });

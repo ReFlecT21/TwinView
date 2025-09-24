@@ -117,24 +117,37 @@ ${result.productRecommendations?.map((product: string) => `• ${product}`).join
   }
 }
 
-export async function generateDigitalTwinStrategy(companyName: string, industry: string, businessAreas: string[]): Promise<string> {
+export async function generateDigitalTwinStrategy(companyName: string, industry: string, businessAreas: string[], employees?: number): Promise<{
+  strategyAnalysis: string;
+  maturityScore: number;
+  status: 'not_started' | 'researching' | 'implementing' | 'completed';
+  keyInitiatives: string[];
+  recommendations: Array<{title: string; description: string}>;
+}> {
   try {
-    const prompt = `Analyze the digital twin strategy for ${companyName}, a ${industry} company with business areas: ${businessAreas.join(', ')}.
+    const prompt = `Analyze the digital twin strategy for ${companyName}, a ${industry} company with business areas: ${businessAreas.join(', ')} and ${employees || 'unknown'} employees.
 
-Provide insights on:
-1. Current digital twin initiatives they likely have
-2. Strategic priorities for digital twin adoption
-3. Technology challenges they face
-4. Growth opportunities through digital twins
-5. Industry-specific digital twin use cases
+Provide comprehensive strategic insights including:
+1. Current digital twin maturity assessment (0-100%)
+2. Implementation status recommendation
+3. Key strategic initiatives they should focus on
+4. Specific recommendations with titles and descriptions
+5. Detailed strategy analysis
 
-Respond with a comprehensive strategy analysis in JSON format:
+Respond in JSON format:
 {
   "currentInitiatives": "description of likely current digital twin efforts",
   "strategicPriorities": ["list of strategic priorities"],
   "technologyChallenges": ["list of technical challenges"],
   "growthOpportunities": ["list of growth opportunities"],
-  "industryCases": ["industry-specific use cases"]
+  "industryCases": ["industry-specific use cases"],
+  "maturityScore": number (0-100),
+  "recommendedStatus": "not_started|researching|implementing|completed",
+  "keyInitiatives": ["list of 3-5 key initiatives they should focus on"],
+  "recommendations": [
+    {"title": "recommendation title", "description": "detailed description"},
+    {"title": "another title", "description": "detailed description"}
+  ]
 }`;
 
     const response = await openai.chat.completions.create({
@@ -142,7 +155,7 @@ Respond with a comprehensive strategy analysis in JSON format:
       messages: [
         {
           role: "system",
-          content: "You are a digital twin strategy consultant with deep expertise in enterprise digital transformation across various industries."
+          content: "You are a digital twin strategy consultant with deep expertise in enterprise digital transformation. Provide actionable, industry-specific recommendations."
         },
         {
           role: "user",
@@ -153,8 +166,8 @@ Respond with a comprehensive strategy analysis in JSON format:
     });
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
-    
-    return `**Current Digital Twin Initiatives**: ${result.currentInitiatives}
+
+    const strategyAnalysis = `**Current Digital Twin Initiatives**: ${result.currentInitiatives}
 
 **Strategic Priorities**:
 ${result.strategicPriorities?.map((priority: string) => `• ${priority}`).join('\n')}
@@ -167,6 +180,19 @@ ${result.growthOpportunities?.map((opportunity: string) => `• ${opportunity}`)
 
 **Industry-Specific Use Cases**:
 ${result.industryCases?.map((useCase: string) => `• ${useCase}`).join('\n')}`;
+
+    return {
+      strategyAnalysis,
+      maturityScore: Math.max(0, Math.min(100, result.maturityScore || 25)),
+      status: ['not_started', 'researching', 'implementing', 'completed'].includes(result.recommendedStatus)
+        ? result.recommendedStatus
+        : 'researching',
+      keyInitiatives: result.keyInitiatives || [],
+      recommendations: result.recommendations || [
+        {title: "Industry Focus", description: `${industry}-specific solutions`},
+        {title: "Scale Factor", description: `${employees ? employees.toLocaleString() + " employee" : "Enterprise"} implementation`}
+      ]
+    };
 
   } catch (error) {
     throw new Error("Failed to generate digital twin strategy: " + (error as Error).message);

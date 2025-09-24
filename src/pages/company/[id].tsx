@@ -15,6 +15,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Company } from "@shared/schema";
 import {
   ArrowLeft,
@@ -61,6 +68,55 @@ function getMaturityColor(maturity: number) {
   if (maturity < 60) return "bg-yellow-500";
   if (maturity < 90) return "bg-green-500";
   return "bg-blue-500";
+}
+
+function renderMarkdownText(text: string) {
+  if (!text) return null;
+
+  // Split text into lines for processing
+  const lines = text.split('\n');
+  const elements: JSX.Element[] = [];
+
+  lines.forEach((line, index) => {
+    if (line.trim() === '') {
+      elements.push(<br key={`br-${index}`} />);
+      return;
+    }
+
+    // Handle bullet points
+    if (line.trim().startsWith('•') || line.trim().startsWith('-')) {
+      const content = line.replace(/^[\s]*[•-]\s*/, '');
+      const processedContent = processBoldText(content);
+      elements.push(
+        <div key={index} className="flex items-start space-x-2 my-2">
+          <span className="text-primary mt-1">•</span>
+          <span className="flex-1">{processedContent}</span>
+        </div>
+      );
+      return;
+    }
+
+    // Handle regular lines
+    const processedContent = processBoldText(line);
+    elements.push(
+      <div key={index} className="my-2">
+        {processedContent}
+      </div>
+    );
+  });
+
+  return <div>{elements}</div>;
+}
+
+function processBoldText(text: string) {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      const boldText = part.slice(2, -2);
+      return <strong key={index} className="font-semibold">{boldText}</strong>;
+    }
+    return part;
+  });
 }
 
 export default function CompanyDetailsPage() {
@@ -211,7 +267,9 @@ export default function CompanyDetailsPage() {
       setEditableMaturity(company.digitalTwinMaturity || 0);
       setEditableStatus(company.digitalTwinStatus || "not_started");
       setEditableKeyInitiatives(company.businessAreas || []);
-      setEditableRecommendations([
+
+      // Try to parse recommendations from notes field, fallback to defaults
+      let recommendations = [
         {
           title: "Industry Focus",
           description: `${company.industry}-specific solutions`
@@ -220,7 +278,20 @@ export default function CompanyDetailsPage() {
           title: "Scale Factor",
           description: `${company.employees ? company.employees.toLocaleString() + " employee" : "Enterprise"} implementation`
         },
-      ]);
+      ];
+
+      if (company.notes) {
+        try {
+          const parsed = JSON.parse(company.notes);
+          if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].title && parsed[0].description) {
+            recommendations = parsed;
+          }
+        } catch (e) {
+          // Keep default recommendations if parsing fails
+        }
+      }
+
+      setEditableRecommendations(recommendations);
 
       // Initialize structured components data from database or defaults
       setEditablePainPoints(company.painPoints || [
@@ -376,15 +447,10 @@ export default function CompanyDetailsPage() {
 
   const saveRecommendations = () => {
     if (!company) return;
-    // For now, we'll save recommendations to the company notes field
-    // In the future, you might want to add a separate recommendations field to the schema
-    const recommendationsText = editableRecommendations
-      .map(rec => `${rec.title}: ${rec.description}`)
-      .join('\n');
-
+    // Save recommendations as JSON in the notes field
     updateCompanyMutation.mutate({
       id: company.id,
-      data: { notes: recommendationsText },
+      data: { notes: JSON.stringify(editableRecommendations) },
     });
     setIsEditingRecommendations(false);
   };
@@ -1173,7 +1239,7 @@ export default function CompanyDetailsPage() {
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Current Status */}
-                <Card className="p-6">
+                <Card className="p-6 h-96 flex flex-col">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
@@ -1189,66 +1255,119 @@ export default function CompanyDetailsPage() {
                     </Button>
                   </div>
 
-                  {isEditingMaturity ? (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">
-                          Digital Twin Maturity (%)
-                        </label>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={editableMaturity}
-                          onChange={(e) =>
-                            setEditableMaturity(parseInt(e.target.value) || 0)
-                          }
-                          className="mt-1"
-                        />
-                        <div className="w-full bg-muted rounded-full h-3 mt-2">
+                  <div className="space-y-4 flex-1 overflow-y-auto">
+                    <div className="p-4 bg-secondary/50 rounded-lg">
+                      <div className="text-sm text-muted-foreground mb-2">
+                        Digital Twin Maturity
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-24 bg-muted rounded-full h-3">
                           <div
                             className={`h-3 rounded-full ${getMaturityColor(
-                              editableMaturity
+                              company.digitalTwinMaturity
                             )}`}
-                            style={{ width: `${editableMaturity}%` }}
+                            style={{
+                              width: `${company.digitalTwinMaturity}%`,
+                            }}
                           />
                         </div>
+                        <span className="font-semibold">
+                          {company.digitalTwinMaturity}%
+                        </span>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">
-                          Implementation Status
-                        </label>
-                        <Select
-                          value={editableStatus}
-                          onValueChange={(value) => {
-                            console.log("Status selected:", value, typeof value);
-                            // Ensure we only accept valid string values
-                            if (typeof value === 'string' && value) {
-                              setEditableStatus(value);
+                    </div>
+                    <div className="p-4 bg-secondary/50 rounded-lg">
+                      <div className="text-sm text-muted-foreground mb-2">
+                        Implementation Stage
+                      </div>
+                      <Badge
+                        className={
+                          statusColors[
+                            company.digitalTwinStatus as keyof typeof statusColors
+                          ]
+                        }
+                      >
+                        {
+                          statusLabels[
+                            company.digitalTwinStatus as keyof typeof statusLabels
+                          ]
+                        }
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Current Status Edit Modal */}
+                  <Dialog open={isEditingMaturity} onOpenChange={setIsEditingMaturity}>
+                    <DialogContent className="max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle>Edit Current Status</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-6 py-4">
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">
+                            Digital Twin Maturity (%)
+                          </label>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={editableMaturity}
+                            onChange={(e) =>
+                              setEditableMaturity(parseInt(e.target.value) || 0)
                             }
-                          }}
-                        >
-                          <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="not_started">
-                              Not Started
-                            </SelectItem>
-                            <SelectItem value="researching">
-                              Researching
-                            </SelectItem>
-                            <SelectItem value="implementing">
-                              Implementing
-                            </SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Current: {editableStatus}
+                            className="mt-1"
+                          />
+                          <div className="w-full bg-muted rounded-full h-3 mt-2">
+                            <div
+                              className={`h-3 rounded-full ${getMaturityColor(
+                                editableMaturity
+                              )}`}
+                              style={{ width: `${editableMaturity}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">
+                            Implementation Status
+                          </label>
+                          <Select
+                            value={editableStatus}
+                            onValueChange={(value) => {
+                              console.log("Status selected:", value, typeof value);
+                              // Ensure we only accept valid string values
+                              if (typeof value === 'string' && value) {
+                                setEditableStatus(value);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="not_started">
+                                Not Started
+                              </SelectItem>
+                              <SelectItem value="researching">
+                                Researching
+                              </SelectItem>
+                              <SelectItem value="implementing">
+                                Implementing
+                              </SelectItem>
+                              <SelectItem value="completed">Completed</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Current: {editableStatus}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex justify-end pt-4">
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsEditingMaturity(false)}
+                        >
+                          Cancel
+                        </Button>
                         <Button
                           onClick={saveMaturityAndStatus}
                           disabled={updateCompanyMutation.isPending}
@@ -1260,54 +1379,13 @@ export default function CompanyDetailsPage() {
                           )}
                           Save Changes
                         </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="p-4 bg-secondary/50 rounded-lg">
-                        <div className="text-sm text-muted-foreground mb-2">
-                          Digital Twin Maturity
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <div className="w-24 bg-muted rounded-full h-3">
-                            <div
-                              className={`h-3 rounded-full ${getMaturityColor(
-                                company.digitalTwinMaturity
-                              )}`}
-                              style={{
-                                width: `${company.digitalTwinMaturity}%`,
-                              }}
-                            />
-                          </div>
-                          <span className="font-semibold">
-                            {company.digitalTwinMaturity}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="p-4 bg-secondary/50 rounded-lg">
-                        <div className="text-sm text-muted-foreground mb-2">
-                          Implementation Stage
-                        </div>
-                        <Badge
-                          className={
-                            statusColors[
-                              company.digitalTwinStatus as keyof typeof statusColors
-                            ]
-                          }
-                        >
-                          {
-                            statusLabels[
-                              company.digitalTwinStatus as keyof typeof statusLabels
-                            ]
-                          }
-                        </Badge>
-                      </div>
-                    </div>
-                  )}
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </Card>
 
                 {/* Key Initiatives */}
-                <Card className="p-6">
+                <Card className="p-6 h-96 flex flex-col">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
@@ -1325,39 +1403,69 @@ export default function CompanyDetailsPage() {
                     </Button>
                   </div>
 
-                  {isEditingKeyInitiatives ? (
-                    <div className="space-y-4">
-                      {editableKeyInitiatives.map((initiative, index) => (
+                  <div className="space-y-3 flex-1 overflow-y-auto">
+                    {editableKeyInitiatives.length > 0 ? (
+                      editableKeyInitiatives.map((initiative, index) => (
                         <div
                           key={index}
-                          className="flex items-center space-x-2"
+                          className="flex items-center space-x-3 p-3 bg-secondary/30 rounded-lg"
                         >
-                          <Input
-                            value={initiative}
-                            onChange={(e) =>
-                              updateKeyInitiative(index, e.target.value)
-                            }
-                            placeholder="Enter key initiative"
-                            className="flex-1"
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeKeyInitiative(index)}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
+                          <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                          <span className="text-sm">{initiative}</span>
                         </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        onClick={addKeyInitiative}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Key Initiative
-                      </Button>
-                      <div className="flex justify-end pt-4">
+                      ))
+                    ) : (
+                      <div className="text-sm text-muted-foreground italic p-3 bg-secondary/30 rounded-lg">
+                        No key initiatives specified
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Key Initiatives Edit Modal */}
+                  <Dialog open={isEditingKeyInitiatives} onOpenChange={setIsEditingKeyInitiatives}>
+                    <DialogContent className="max-w-xl max-h-[80vh] overflow-hidden flex flex-col">
+                      <DialogHeader>
+                        <DialogTitle>Edit Key Initiatives</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex-1 overflow-y-auto space-y-4 py-4">
+                        {editableKeyInitiatives.map((initiative, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2"
+                          >
+                            <Input
+                              value={initiative}
+                              onChange={(e) =>
+                                updateKeyInitiative(index, e.target.value)
+                              }
+                              placeholder="Enter key initiative"
+                              className="flex-1"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeKeyInitiative(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          variant="outline"
+                          onClick={addKeyInitiative}
+                          className="w-full"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Key Initiative
+                        </Button>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsEditingKeyInitiatives(false)}
+                        >
+                          Cancel
+                        </Button>
                         <Button
                           onClick={saveKeyInitiatives}
                           disabled={updateCompanyMutation.isPending}
@@ -1369,31 +1477,13 @@ export default function CompanyDetailsPage() {
                           )}
                           Save Changes
                         </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {editableKeyInitiatives.length > 0 ? (
-                        editableKeyInitiatives.map((initiative, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center space-x-3 p-3 bg-secondary/30 rounded-lg"
-                          >
-                            <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
-                            <span className="text-sm">{initiative}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-sm text-muted-foreground italic p-3 bg-secondary/30 rounded-lg">
-                          No key initiatives specified
-                        </div>
-                      )}
-                    </div>
-                  )}
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </Card>
 
                 {/* Recommendations */}
-                <Card className="p-6">
+                <Card className="p-6 h-96 flex flex-col">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <div className="w-3 h-3 bg-orange-500 rounded-full mr-3"></div>
@@ -1411,54 +1501,80 @@ export default function CompanyDetailsPage() {
                     </Button>
                   </div>
 
-                  {isEditingRecommendations ? (
-                    <div className="space-y-4">
-                      {editableRecommendations.map((recommendation, index) => (
-                        <div
-                          key={index}
-                          className="space-y-2 p-3 border rounded-lg"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              value={recommendation.title}
+                  <div className="space-y-3 flex-1 overflow-y-auto">
+                    {editableRecommendations.map((recommendation, index) => (
+                      <div key={index} className="p-3 bg-secondary/30 rounded-lg">
+                        <div className="text-sm font-medium text-orange-700 dark:text-orange-300">
+                          {recommendation.title}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          {recommendation.description}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Recommendations Edit Modal */}
+                  <Dialog open={isEditingRecommendations} onOpenChange={setIsEditingRecommendations}>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+                      <DialogHeader>
+                        <DialogTitle>Edit Recommendations</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex-1 overflow-y-auto space-y-4 py-4">
+                        {editableRecommendations.map((recommendation, index) => (
+                          <div
+                            key={index}
+                            className="space-y-2 p-4 border rounded-lg"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <Input
+                                value={recommendation.title}
+                                onChange={(e) =>
+                                  recommendationHelpers.updateTitle(
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Recommendation title"
+                                className="font-medium"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => recommendationHelpers.remove(index)}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <Textarea
+                              value={recommendation.description}
                               onChange={(e) =>
-                                recommendationHelpers.updateTitle(
+                                recommendationHelpers.updateDescription(
                                   index,
                                   e.target.value
                                 )
                               }
-                              placeholder="Recommendation title"
-                              className="font-medium"
+                              placeholder="Description"
+                              rows={3}
                             />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => recommendationHelpers.remove(index)}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
                           </div>
-                          <Input
-                            value={recommendation.description}
-                            onChange={(e) =>
-                              recommendationHelpers.updateDescription(
-                                index,
-                                e.target.value
-                              )
-                            }
-                            placeholder="Description"
-                          />
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        onClick={recommendationHelpers.add}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Recommendation
-                      </Button>
-                      <div className="flex justify-end pt-4">
+                        ))}
+                        <Button
+                          variant="outline"
+                          onClick={recommendationHelpers.add}
+                          className="w-full"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Recommendation
+                        </Button>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsEditingRecommendations(false)}
+                        >
+                          Cancel
+                        </Button>
                         <Button
                           onClick={saveRecommendations}
                           disabled={updateCompanyMutation.isPending}
@@ -1470,22 +1586,9 @@ export default function CompanyDetailsPage() {
                           )}
                           Save Changes
                         </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {editableRecommendations.map((recommendation, index) => (
-                        <div key={index} className="p-3 bg-secondary/30 rounded-lg">
-                          <div className="text-sm font-medium text-orange-700 dark:text-orange-300">
-                            {recommendation.title}
-                          </div>
-                          <div className="text-sm text-muted-foreground mt-1">
-                            {recommendation.description}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </Card>
               </div>
 
@@ -1528,8 +1631,8 @@ export default function CompanyDetailsPage() {
                   </div>
                 ) : company.digitalTwinStrategy || manualStrategy ? (
                   <div className="prose prose-base max-w-none">
-                    <div className="text-base whitespace-pre-wrap leading-relaxed p-4 bg-secondary/20 rounded-lg">
-                      {company.digitalTwinStrategy || manualStrategy}
+                    <div className="text-base leading-relaxed p-4 bg-secondary/20 rounded-lg">
+                      {renderMarkdownText(company.digitalTwinStrategy || manualStrategy)}
                     </div>
                   </div>
                 ) : (
@@ -1980,8 +2083,8 @@ export default function CompanyDetailsPage() {
                   </div>
                 ) : company.dellOpportunity || manualOpportunity ? (
                   <div className="prose prose-base max-w-none">
-                    <div className="text-base whitespace-pre-wrap leading-relaxed p-4 bg-secondary/20 rounded-lg">
-                      {company.dellOpportunity || manualOpportunity}
+                    <div className="text-base leading-relaxed p-4 bg-secondary/20 rounded-lg">
+                      {renderMarkdownText(company.dellOpportunity || manualOpportunity)}
                     </div>
                   </div>
                 ) : (
@@ -2660,8 +2763,8 @@ export default function CompanyDetailsPage() {
                   </div>
                 ) : company.competitiveAnalysis || manualCompetitive ? (
                   <div className="prose prose-base max-w-none">
-                    <div className="text-base whitespace-pre-wrap leading-relaxed p-4 bg-secondary/20 rounded-lg">
-                      {company.competitiveAnalysis || manualCompetitive}
+                    <div className="text-base leading-relaxed p-4 bg-secondary/20 rounded-lg">
+                      {renderMarkdownText(company.competitiveAnalysis || manualCompetitive)}
                     </div>
                   </div>
                 ) : (
