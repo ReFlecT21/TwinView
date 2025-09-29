@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Filter, List, Grid3X3 } from "lucide-react";
-import { industries } from "@shared/schema";
+import { industries, companyTypes } from "@shared/schema";
 
 interface FiltersSectionProps {
   searchQuery: string;
@@ -20,6 +20,8 @@ interface FiltersSectionProps {
   onStatusChange: (value: string) => void;
   selectedOpportunityScore: string;
   onOpportunityScoreChange: (value: string) => void;
+  selectedType: string;
+  onTypeChange: (value: string) => void;
 }
 
 export default function FiltersSection({
@@ -31,6 +33,8 @@ export default function FiltersSection({
   onStatusChange,
   selectedOpportunityScore,
   onOpportunityScoreChange,
+  selectedType,
+  onTypeChange,
 }: FiltersSectionProps) {
   return (
     <Card className="p-6">
@@ -57,6 +61,20 @@ export default function FiltersSection({
               {industries.map((industry) => (
                 <SelectItem key={industry} value={industry}>
                   {industry}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedType} onValueChange={onTypeChange}>
+            <SelectTrigger className="w-full sm:w-auto" data-testid="select-type">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All Types">All Types</SelectItem>
+              {companyTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type.replace(/_/g, ' ')}
                 </SelectItem>
               ))}
             </SelectContent>

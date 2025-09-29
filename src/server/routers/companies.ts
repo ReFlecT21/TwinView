@@ -1,9 +1,11 @@
 import { z } from 'zod';
 import { router, publicProcedure, getCurrentUserInfo } from '../trpc';
 import { generateCompetitiveAnalysis, generateOpportunityAssessment, generateDigitalTwinStrategy } from '../openai';
+import { companyTypes } from '@shared/schema';
 
 const createCompanySchema = z.object({
   name: z.string(),
+  type: z.enum(companyTypes).optional(),
   industry: z.string(),
   country: z.string(),
   employees: z.number().optional(),
@@ -30,6 +32,13 @@ const createCompanySchema = z.object({
   threats: z.array(z.object({title: z.string(), description: z.string()})).default([]),
   differentiation: z.array(z.object({title: z.string(), description: z.string()})).default([]),
   winStrategy: z.array(z.object({title: z.string(), description: z.string()})).default([]),
+  personnel: z.array(z.object({
+    name: z.string(),
+    title: z.string(),
+    email: z.string().email().optional(),
+    phone: z.string().optional(),
+    notes: z.string().optional(),
+  })).default([]),
 });
 
 export const companiesRouter = router({
@@ -37,6 +46,7 @@ export const companiesRouter = router({
     .input(z.object({
       search: z.string().optional(),
       industry: z.string().optional(),
+      type: z.enum(companyTypes).optional(),
       digitalTwinStatus: z.string().optional(),
       country: z.string().optional(),
     }).optional())
@@ -51,6 +61,7 @@ export const companiesRouter = router({
       }
 
       if (input?.industry) where.industry = input.industry;
+      if (input?.type) where.type = input.type;
       if (input?.digitalTwinStatus) where.digitalTwinStatus = input.digitalTwinStatus;
       if (input?.country) where.country = input.country;
 

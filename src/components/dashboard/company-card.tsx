@@ -76,7 +76,7 @@ export default function CompanyCard({ company, onClick }: CompanyCardProps) {
                 {company.name}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {company.industry} • {company.country}
+                {company.type && `${company.type} • `}{company.industry} • {company.country}
               </p>
             </div>
           </div>

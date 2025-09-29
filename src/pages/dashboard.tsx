@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [isCompanyFormOpen, setIsCompanyFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndustry, setSelectedIndustry] = useState("All Industries");
+  const [selectedType, setSelectedType] = useState("All Types");
   const [selectedStatus, setSelectedStatus] = useState("All Statuses");
   const [selectedOpportunityScore, setSelectedOpportunityScore] = useState("All Opportunity Scores");
 
@@ -22,6 +23,7 @@ export default function Dashboard() {
   const queryInput = {
     search: searchQuery || undefined,
     industry: selectedIndustry !== "All Industries" ? selectedIndustry : undefined,
+    type: selectedType !== "All Types" ? (selectedType as any) : undefined,
     digitalTwinStatus: selectedStatus !== "All Statuses" ? selectedStatus : undefined,
   };
 
@@ -93,6 +95,8 @@ export default function Dashboard() {
           onSearchChange={setSearchQuery}
           selectedIndustry={selectedIndustry}
           onIndustryChange={setSelectedIndustry}
+          selectedType={selectedType}
+          onTypeChange={setSelectedType}
           selectedStatus={selectedStatus}
           onStatusChange={setSelectedStatus}
           selectedOpportunityScore={selectedOpportunityScore}

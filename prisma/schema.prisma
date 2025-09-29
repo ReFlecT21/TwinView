@@ -10,9 +10,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum CompanyType {
+  STARTUP
+  SME
+  MNC
+  ENTERPRISE
+  CORPORATION
+  LLC
+  PARTNERSHIP
+  SOLE_PROPRIETORSHIP
+  NON_PROFIT
+  GOVERNMENT
+  PUBLIC_COMPANY
+  PRIVATE_COMPANY
+  UNICORN
+  SCALE_UP
+  FAMILY_BUSINESS
+  COOPERATIVE
+  JOINT_VENTURE
+  SUBSIDIARY
+  HOLDING_COMPANY
+  CONSULTANCY
+  FREELANCER
+  OTHER
+}
+
 model Company {
   id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar
   name                 String
+  type                 CompanyType?  @default(OTHER)
   industry             String
   country              String
   employees            Int?
@@ -41,6 +67,7 @@ model Company {
   threats              Json     @default("[]")
   differentiation      Json     @default("[]")
   winStrategy          Json     @default("[]")
+  personnel            Json     @default("[]")
 
   activityLogs ActivityLog[]
 

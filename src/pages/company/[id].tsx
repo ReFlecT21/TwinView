@@ -74,18 +74,18 @@ function renderMarkdownText(text: string) {
   if (!text) return null;
 
   // Split text into lines for processing
-  const lines = text.split('\n');
+  const lines = text.split("\n");
   const elements: JSX.Element[] = [];
 
   lines.forEach((line, index) => {
-    if (line.trim() === '') {
+    if (line.trim() === "") {
       elements.push(<br key={`br-${index}`} />);
       return;
     }
 
     // Handle bullet points
-    if (line.trim().startsWith('•') || line.trim().startsWith('-')) {
-      const content = line.replace(/^[\s]*[•-]\s*/, '');
+    if (line.trim().startsWith("•") || line.trim().startsWith("-")) {
+      const content = line.replace(/^[\s]*[•-]\s*/, "");
       const processedContent = processBoldText(content);
       elements.push(
         <div key={index} className="flex items-start space-x-2 my-2">
@@ -111,9 +111,13 @@ function renderMarkdownText(text: string) {
 function processBoldText(text: string) {
   const parts = text.split(/(\*\*.*?\*\*)/g);
   return parts.map((part, index) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
+    if (part.startsWith("**") && part.endsWith("**")) {
       const boldText = part.slice(2, -2);
-      return <strong key={index} className="font-semibold">{boldText}</strong>;
+      return (
+        <strong key={index} className="font-semibold">
+          {boldText}
+        </strong>
+      );
     }
     return part;
   });
@@ -130,6 +134,7 @@ export default function CompanyDetailsPage() {
   const [isEditingStrategy, setIsEditingStrategy] = useState(false);
   const [isEditingOpportunity, setIsEditingOpportunity] = useState(false);
   const [isEditingCompetitive, setIsEditingCompetitive] = useState(false);
+  const [isEditingPersonnel, setIsEditingPersonnel] = useState(false);
 
   // Component editing states
   const [isEditingCompanyData, setIsEditingCompanyData] = useState(false);
@@ -137,7 +142,8 @@ export default function CompanyDetailsPage() {
   const [isEditingDealValue, setIsEditingDealValue] = useState(false);
   const [isEditingMaturity, setIsEditingMaturity] = useState(false);
   const [isEditingKeyInitiatives, setIsEditingKeyInitiatives] = useState(false);
-  const [isEditingRecommendations, setIsEditingRecommendations] = useState(false);
+  const [isEditingRecommendations, setIsEditingRecommendations] =
+    useState(false);
 
   // Dell Opportunity editing states
   const [isEditingPainPoints, setIsEditingPainPoints] = useState(false);
@@ -156,6 +162,14 @@ export default function CompanyDetailsPage() {
   const [manualStrategy, setManualStrategy] = useState("");
   const [manualOpportunity, setManualOpportunity] = useState("");
   const [manualCompetitive, setManualCompetitive] = useState("");
+  type Personnel = {
+    name: string;
+    title: string;
+    email?: string;
+    phone?: string;
+    notes?: string;
+  };
+  const [editablePersonnel, setEditablePersonnel] = useState<Personnel[]>([]);
 
   // Editable component states
   const [editableCompanyData, setEditableCompanyData] = useState({
@@ -172,7 +186,9 @@ export default function CompanyDetailsPage() {
   );
   const [editableMaturity, setEditableMaturity] = useState(0);
   const [editableStatus, setEditableStatus] = useState("");
-  const [editableKeyInitiatives, setEditableKeyInitiatives] = useState<string[]>([]);
+  const [editableKeyInitiatives, setEditableKeyInitiatives] = useState<
+    string[]
+  >([]);
   const [editableRecommendations, setEditableRecommendations] = useState([
     { title: "Industry Focus", description: "Technology-specific solutions" },
     { title: "Scale Factor", description: "10,000 employee implementation" },
@@ -265,10 +281,17 @@ export default function CompanyDetailsPage() {
       });
       setEditableBusinessAreas(company.businessAreas || []);
       setEditableMaturity(company.digitalTwinMaturity || 0);
-      const validStatuses = ["not_started", "researching", "implementing", "completed"];
-      const statusValue = company.digitalTwinStatus && validStatuses.includes(company.digitalTwinStatus)
-        ? company.digitalTwinStatus
-        : "not_started";
+      const validStatuses = [
+        "not_started",
+        "researching",
+        "implementing",
+        "completed",
+      ];
+      const statusValue =
+        company.digitalTwinStatus &&
+        validStatuses.includes(company.digitalTwinStatus)
+          ? company.digitalTwinStatus
+          : "not_started";
       setEditableStatus(statusValue);
       setEditableKeyInitiatives(company.businessAreas || []);
 
@@ -276,18 +299,27 @@ export default function CompanyDetailsPage() {
       let recommendations = [
         {
           title: "Industry Focus",
-          description: `${company.industry}-specific solutions`
+          description: `${company.industry}-specific solutions`,
         },
         {
           title: "Scale Factor",
-          description: `${company.employees ? company.employees.toLocaleString() + " employee" : "Enterprise"} implementation`
+          description: `${
+            company.employees
+              ? company.employees.toLocaleString() + " employee"
+              : "Enterprise"
+          } implementation`,
         },
       ];
 
       if (company.notes) {
         try {
           const parsed = JSON.parse(company.notes);
-          if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].title && parsed[0].description) {
+          if (
+            Array.isArray(parsed) &&
+            parsed.length > 0 &&
+            parsed[0].title &&
+            parsed[0].description
+          ) {
             recommendations = parsed;
           }
         } catch (e) {
@@ -299,68 +331,135 @@ export default function CompanyDetailsPage() {
 
       // Initialize structured components data from database or defaults
       const painPointsData = Array.isArray(company.painPoints)
-        ? company.painPoints as Array<{title: string; description: string}>
+        ? (company.painPoints as Array<{ title: string; description: string }>)
         : [
-            { title: "Digital Twin Gap", description: "0% maturity - room for improvement" },
-            { title: "Industry Challenges", description: "Technology sector needs" }
+            {
+              title: "Digital Twin Gap",
+              description: "0% maturity - room for improvement",
+            },
+            {
+              title: "Industry Challenges",
+              description: "Technology sector needs",
+            },
           ];
       setEditablePainPoints(painPointsData);
       const dellSolutionsData = Array.isArray(company.dellSolutions)
-        ? company.dellSolutions as Array<{title: string; description: string}>
+        ? (company.dellSolutions as Array<{
+            title: string;
+            description: string;
+          }>)
         : [
-            { title: "Infrastructure", description: "PowerEdge servers & storage" },
-            { title: "Edge Computing", description: "Real-time processing solutions" },
-            { title: "Professional Services", description: "Implementation & consulting" }
+            {
+              title: "Infrastructure",
+              description: "PowerEdge servers & storage",
+            },
+            {
+              title: "Edge Computing",
+              description: "Real-time processing solutions",
+            },
+            {
+              title: "Professional Services",
+              description: "Implementation & consulting",
+            },
           ];
       setEditableDellSolutions(dellSolutionsData);
       const nextStepsData = Array.isArray(company.nextSteps)
-        ? company.nextSteps as Array<{title: string; description: string}>
+        ? (company.nextSteps as Array<{ title: string; description: string }>)
         : [
             { title: "1. Discovery Call", description: "Assess current state" },
-            { title: "2. ROI Analysis", description: "Quantify the opportunity" },
-            { title: "3. Proposal", description: "Tailored solution design" }
+            {
+              title: "2. ROI Analysis",
+              description: "Quantify the opportunity",
+            },
+            { title: "3. Proposal", description: "Tailored solution design" },
           ];
       setEditableNextSteps(nextStepsData);
       const competitorsData = Array.isArray(company.competitors)
-        ? company.competitors as Array<{title: string; description: string}>
+        ? (company.competitors as Array<{ title: string; description: string }>)
         : [
-            { title: "AWS IoT TwinMaker", description: "Cloud-native platform" },
-            { title: "Microsoft Azure Digital Twins", description: "Enterprise integration" },
-            { title: "Siemens MindSphere", description: "Industrial IoT focus" }
+            {
+              title: "AWS IoT TwinMaker",
+              description: "Cloud-native platform",
+            },
+            {
+              title: "Microsoft Azure Digital Twins",
+              description: "Enterprise integration",
+            },
+            {
+              title: "Siemens MindSphere",
+              description: "Industrial IoT focus",
+            },
           ];
       setEditableCompetitors(competitorsData);
       const dellAdvantagesData = Array.isArray(company.dellAdvantages)
-        ? company.dellAdvantages as Array<{title: string; description: string}>
+        ? (company.dellAdvantages as Array<{
+            title: string;
+            description: string;
+          }>)
         : [
-            { title: "Edge-to-Cloud", description: "Integrated infrastructure" },
-            { title: "Partner Ecosystem", description: "Proven collaborations" },
-            { title: "Professional Services", description: "Implementation support" }
+            {
+              title: "Edge-to-Cloud",
+              description: "Integrated infrastructure",
+            },
+            {
+              title: "Partner Ecosystem",
+              description: "Proven collaborations",
+            },
+            {
+              title: "Professional Services",
+              description: "Implementation support",
+            },
           ];
       setEditableDellAdvantages(dellAdvantagesData);
       const threatsData = Array.isArray(company.threats)
-        ? company.threats as Array<{title: string; description: string}>
+        ? (company.threats as Array<{ title: string; description: string }>)
         : [
-            { title: "Cloud-First Preference", description: "Customer bias toward cloud" },
-            { title: "Existing Relationships", description: "Incumbent partnerships" },
-            { title: "Budget Constraints", description: "Economic downturn" }
+            {
+              title: "Cloud-First Preference",
+              description: "Customer bias toward cloud",
+            },
+            {
+              title: "Existing Relationships",
+              description: "Incumbent partnerships",
+            },
+            { title: "Budget Constraints", description: "Economic downturn" },
           ];
       setEditableThreats(threatsData);
       const differentiationData = Array.isArray(company.differentiation)
-        ? company.differentiation as Array<{title: string; description: string}>
+        ? (company.differentiation as Array<{
+            title: string;
+            description: string;
+          }>)
         : [
-            { title: "Hybrid Architecture", description: "Edge + cloud flexibility" },
-            { title: "Industry Expertise", description: "Technology specialization" },
-            { title: "TCO Advantage", description: "Cost-effective scaling" }
+            {
+              title: "Hybrid Architecture",
+              description: "Edge + cloud flexibility",
+            },
+            {
+              title: "Industry Expertise",
+              description: "Technology specialization",
+            },
+            { title: "TCO Advantage", description: "Cost-effective scaling" },
           ];
       setEditableDifferentiation(differentiationData);
       const winStrategyData = Array.isArray(company.winStrategy)
-        ? company.winStrategy as Array<{title: string; description: string}>
+        ? (company.winStrategy as Array<{ title: string; description: string }>)
         : [
-            { title: "1. Pilot Program", description: "Low-risk proof of concept" },
-            { title: "2. ROI Demonstration", description: "Quantified business value" },
-            { title: "3. Partnership Approach", description: "Long-term relationship focus" }
+            {
+              title: "1. Pilot Program",
+              description: "Low-risk proof of concept",
+            },
+            {
+              title: "2. ROI Demonstration",
+              description: "Quantified business value",
+            },
+            {
+              title: "3. Partnership Approach",
+              description: "Long-term relationship focus",
+            },
           ];
       setEditableWinStrategy(winStrategyData);
+      setEditablePersonnel((company as any).personnel || []);
     }
   }, [company]);
 
@@ -445,8 +544,17 @@ export default function CompanyDetailsPage() {
     const status = String(editableStatus).toLowerCase();
 
     // Validate status value
-    const validStatuses = ["not_started", "researching", "implementing", "completed"] as const;
-    const finalStatus: typeof validStatuses[number] = validStatuses.includes(status as any) ? status as any : "not_started";
+    const validStatuses = [
+      "not_started",
+      "researching",
+      "implementing",
+      "completed",
+    ] as const;
+    const finalStatus: (typeof validStatuses)[number] = validStatuses.includes(
+      status as any
+    )
+      ? (status as any)
+      : "not_started";
 
     console.log("Saving maturity and status:", {
       digitalTwinMaturity: maturity,
@@ -716,6 +824,36 @@ export default function CompanyDetailsPage() {
     router.back();
   };
 
+  const addPersonnel = () => {
+    setEditablePersonnel([
+      ...editablePersonnel,
+      { name: "", title: "", email: "", phone: "", notes: "" },
+    ]);
+  };
+
+  const removePersonnel = (index: number) => {
+    setEditablePersonnel(editablePersonnel.filter((_, i) => i !== index));
+  };
+
+  const updatePersonnelField = (
+    index: number,
+    key: keyof Personnel,
+    value: string
+  ) => {
+    const updated = [...editablePersonnel];
+    updated[index] = { ...updated[index], [key]: value } as Personnel;
+    setEditablePersonnel(updated);
+  };
+
+  const savePersonnel = () => {
+    if (!company) return;
+    updateCompanyMutation.mutate({
+      id: company.id,
+      data: { personnel: editablePersonnel as any },
+    });
+    setIsEditingPersonnel(false);
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
@@ -903,10 +1041,10 @@ export default function CompanyDetailsPage() {
                 Dell Opportunity
               </TabsTrigger>
               <TabsTrigger
-                value="competitive"
+                value="personnel"
                 className="text-base py-4 px-4 data-[state=active]:bg-background rounded-md mx-1"
               >
-                Competitive Analysis
+                Personnel
               </TabsTrigger>
             </TabsList>
 
@@ -1235,7 +1373,6 @@ export default function CompanyDetailsPage() {
                   )}
                 </Card>
               </div>
-
             </TabsContent>
 
             <TabsContent value="strategy" className="space-y-6">
@@ -1325,7 +1462,10 @@ export default function CompanyDetailsPage() {
                   </div>
 
                   {/* Current Status Edit Modal */}
-                  <Dialog open={isEditingMaturity} onOpenChange={setIsEditingMaturity}>
+                  <Dialog
+                    open={isEditingMaturity}
+                    onOpenChange={setIsEditingMaturity}
+                  >
                     <DialogContent className="max-w-lg">
                       <DialogHeader>
                         <DialogTitle>Edit Current Status</DialogTitle>
@@ -1361,9 +1501,13 @@ export default function CompanyDetailsPage() {
                           <Select
                             value={editableStatus}
                             onValueChange={(value) => {
-                              console.log("Status selected:", value, typeof value);
+                              console.log(
+                                "Status selected:",
+                                value,
+                                typeof value
+                              );
                               // Ensure we only accept valid string values
-                              if (typeof value === 'string' && value) {
+                              if (typeof value === "string" && value) {
                                 setEditableStatus(value);
                               }
                             }}
@@ -1381,7 +1525,9 @@ export default function CompanyDetailsPage() {
                               <SelectItem value="implementing">
                                 Implementing
                               </SelectItem>
-                              <SelectItem value="completed">Completed</SelectItem>
+                              <SelectItem value="completed">
+                                Completed
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                           <div className="text-xs text-muted-foreground mt-1">
@@ -1450,7 +1596,10 @@ export default function CompanyDetailsPage() {
                   </div>
 
                   {/* Key Initiatives Edit Modal */}
-                  <Dialog open={isEditingKeyInitiatives} onOpenChange={setIsEditingKeyInitiatives}>
+                  <Dialog
+                    open={isEditingKeyInitiatives}
+                    onOpenChange={setIsEditingKeyInitiatives}
+                  >
                     <DialogContent className="max-w-xl max-h-[80vh] overflow-hidden flex flex-col">
                       <DialogHeader>
                         <DialogTitle>Edit Key Initiatives</DialogTitle>
@@ -1531,7 +1680,10 @@ export default function CompanyDetailsPage() {
 
                   <div className="space-y-3 flex-1 overflow-y-auto">
                     {editableRecommendations.map((recommendation, index) => (
-                      <div key={index} className="p-3 bg-secondary/30 rounded-lg">
+                      <div
+                        key={index}
+                        className="p-3 bg-secondary/30 rounded-lg"
+                      >
                         <div className="text-sm font-medium text-orange-700 dark:text-orange-300">
                           {recommendation.title}
                         </div>
@@ -1543,50 +1695,57 @@ export default function CompanyDetailsPage() {
                   </div>
 
                   {/* Recommendations Edit Modal */}
-                  <Dialog open={isEditingRecommendations} onOpenChange={setIsEditingRecommendations}>
+                  <Dialog
+                    open={isEditingRecommendations}
+                    onOpenChange={setIsEditingRecommendations}
+                  >
                     <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
                       <DialogHeader>
                         <DialogTitle>Edit Recommendations</DialogTitle>
                       </DialogHeader>
                       <div className="flex-1 overflow-y-auto space-y-4 py-4">
-                        {editableRecommendations.map((recommendation, index) => (
-                          <div
-                            key={index}
-                            className="space-y-2 p-4 border rounded-lg"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <Input
-                                value={recommendation.title}
+                        {editableRecommendations.map(
+                          (recommendation, index) => (
+                            <div
+                              key={index}
+                              className="space-y-2 p-4 border rounded-lg"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <Input
+                                  value={recommendation.title}
+                                  onChange={(e) =>
+                                    recommendationHelpers.updateTitle(
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="Recommendation title"
+                                  className="font-medium"
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    recommendationHelpers.remove(index)
+                                  }
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              <Textarea
+                                value={recommendation.description}
                                 onChange={(e) =>
-                                  recommendationHelpers.updateTitle(
+                                  recommendationHelpers.updateDescription(
                                     index,
                                     e.target.value
                                   )
                                 }
-                                placeholder="Recommendation title"
-                                className="font-medium"
+                                placeholder="Description"
+                                rows={3}
                               />
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => recommendationHelpers.remove(index)}
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
                             </div>
-                            <Textarea
-                              value={recommendation.description}
-                              onChange={(e) =>
-                                recommendationHelpers.updateDescription(
-                                  index,
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Description"
-                              rows={3}
-                            />
-                          </div>
-                        ))}
+                          )
+                        )}
                         <Button
                           variant="outline"
                           onClick={recommendationHelpers.add}
@@ -1660,7 +1819,9 @@ export default function CompanyDetailsPage() {
                 ) : company.digitalTwinStrategy || manualStrategy ? (
                   <div className="prose prose-base max-w-none">
                     <div className="text-base leading-relaxed p-4 bg-secondary/20 rounded-lg">
-                      {renderMarkdownText(company.digitalTwinStrategy || manualStrategy)}
+                      {renderMarkdownText(
+                        company.digitalTwinStrategy || manualStrategy
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -1865,7 +2026,10 @@ export default function CompanyDetailsPage() {
                   )}
 
                   {/* Pain Points Edit Modal */}
-                  <Dialog open={isEditingPainPoints} onOpenChange={setIsEditingPainPoints}>
+                  <Dialog
+                    open={isEditingPainPoints}
+                    onOpenChange={setIsEditingPainPoints}
+                  >
                     <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
                       <DialogHeader>
                         <DialogTitle>Edit Pain Points</DialogTitle>
@@ -1977,7 +2141,10 @@ export default function CompanyDetailsPage() {
                   </div>
 
                   {/* Dell Solutions Edit Modal */}
-                  <Dialog open={isEditingDellSolutions} onOpenChange={setIsEditingDellSolutions}>
+                  <Dialog
+                    open={isEditingDellSolutions}
+                    onOpenChange={setIsEditingDellSolutions}
+                  >
                     <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
                       <DialogHeader>
                         <DialogTitle>Edit Dell Solutions</DialogTitle>
@@ -2003,7 +2170,9 @@ export default function CompanyDetailsPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => dellSolutionHelpers.remove(index)}
+                                onClick={() =>
+                                  dellSolutionHelpers.remove(index)
+                                }
                               >
                                 <X className="w-4 h-4" />
                               </Button>
@@ -2087,7 +2256,10 @@ export default function CompanyDetailsPage() {
                   </div>
 
                   {/* Next Steps Edit Modal */}
-                  <Dialog open={isEditingNextSteps} onOpenChange={setIsEditingNextSteps}>
+                  <Dialog
+                    open={isEditingNextSteps}
+                    onOpenChange={setIsEditingNextSteps}
+                  >
                     <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
                       <DialogHeader>
                         <DialogTitle>Edit Next Steps</DialogTitle>
@@ -2206,7 +2378,9 @@ export default function CompanyDetailsPage() {
                 ) : company.dellOpportunity || manualOpportunity ? (
                   <div className="prose prose-base max-w-none">
                     <div className="text-base leading-relaxed p-4 bg-secondary/20 rounded-lg">
-                      {renderMarkdownText(company.dellOpportunity || manualOpportunity)}
+                      {renderMarkdownText(
+                        company.dellOpportunity || manualOpportunity
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -2222,656 +2396,99 @@ export default function CompanyDetailsPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="competitive" className="space-y-6">
+            <TabsContent value="personnel" className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-semibold">Competitive Analysis</h3>
+                <h3 className="text-2xl font-semibold">Key Personnel</h3>
                 <div className="flex gap-3">
                   <Button
-                    size="lg"
-                    onClick={() =>
-                      generateCompetitiveAnalysisMutation.mutate({
-                        id: company.id,
-                        companyName: company.name,
-                        industry: company.industry,
-                      })
-                    }
-                    disabled={generateCompetitiveAnalysisMutation.isPending}
-                  >
-                    {generateCompetitiveAnalysisMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Brain className="w-4 h-4 mr-2" />
-                    )}
-                    Generate AI Analysis
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Market Position */}
-                <Card className="p-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center">
-                    <div className="w-3 h-3 bg-indigo-500 rounded-full mr-3"></div>
-                    Market Position
-                  </h4>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-secondary/50 rounded-lg">
-                      <div className="text-sm text-muted-foreground mb-2">
-                        Industry
-                      </div>
-                      <div className="text-lg font-semibold">
-                        {company.industry}
-                      </div>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        Market sector focus
-                      </div>
-                    </div>
-                    <div className="p-4 bg-secondary/50 rounded-lg">
-                      <div className="text-sm text-muted-foreground mb-2">
-                        Company Scale
-                      </div>
-                      <div className="text-lg font-semibold">
-                        {company.employees
-                          ? `${company.employees.toLocaleString()} employees`
-                          : "Enterprise"}
-                      </div>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        {company.revenue || "Revenue scale not specified"}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Digital Readiness */}
-                <Card className="p-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center">
-                    <div className="w-3 h-3 bg-cyan-500 rounded-full mr-3"></div>
-                    Digital Readiness
-                  </h4>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-secondary/50 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="text-sm text-muted-foreground">
-                          Current Maturity
-                        </div>
-                        <div className="text-lg font-bold">
-                          {company.digitalTwinMaturity}%
-                        </div>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-3">
-                        <div
-                          className={`h-3 rounded-full ${getMaturityColor(
-                            company.digitalTwinMaturity
-                          )}`}
-                          style={{ width: `${company.digitalTwinMaturity}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div className="p-4 bg-secondary/50 rounded-lg">
-                      <div className="text-sm text-muted-foreground mb-2">
-                        Implementation Status
-                      </div>
-                      <Badge
-                        className={
-                          statusColors[
-                            company.digitalTwinStatus as keyof typeof statusColors
-                          ]
-                        }
-                      >
-                        {
-                          statusLabels[
-                            company.digitalTwinStatus as keyof typeof statusLabels
-                          ]
-                        }
-                      </Badge>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Key Competitors */}
-                <Card className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-lg font-semibold flex items-center">
-                      <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
-                      Key Competitors
-                    </h4>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setIsEditingCompetitors(!isEditingCompetitors)
-                      }
-                    >
-                      <Edit3 className="w-3 h-3 mr-2" />
-                      {isEditingCompetitors ? "Cancel" : "Edit"}
-                    </Button>
-                  </div>
-
-                  {isEditingCompetitors ? (
-                    <div className="space-y-4">
-                      {editableCompetitors.map((competitor, index) => (
-                        <div
-                          key={index}
-                          className="space-y-2 p-3 border rounded-lg"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              value={competitor.title}
-                              onChange={(e) =>
-                                competitorHelpers.updateTitle(
-                                  index,
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Competitor name"
-                              className="font-medium"
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => competitorHelpers.remove(index)}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <Input
-                            value={competitor.description}
-                            onChange={(e) =>
-                              competitorHelpers.updateDescription(
-                                index,
-                                e.target.value
-                              )
-                            }
-                            placeholder="Key strength/focus"
-                          />
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        onClick={competitorHelpers.add}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Competitor
-                      </Button>
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsEditingCompetitors(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={saveCompetitors}
-                          disabled={updateCompanyMutation.isPending}
-                        >
-                          {updateCompanyMutation.isPending ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : null}
-                          Save Changes
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {editableCompetitors.map((competitor, index) => (
-                        <div
-                          key={index}
-                          className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800"
-                        >
-                          <div className="text-sm font-medium text-red-800 dark:text-red-200">
-                            {competitor.title}
-                          </div>
-                          <div className="text-sm text-red-600 dark:text-red-300 mt-1">
-                            {competitor.description}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-
-                {/* Dell Advantages */}
-                <Card className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-lg font-semibold flex items-center">
-                      <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                      Dell Advantages
-                    </h4>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setIsEditingDellAdvantages(!isEditingDellAdvantages)
-                      }
-                    >
-                      <Edit3 className="w-3 h-3 mr-2" />
-                      {isEditingDellAdvantages ? "Cancel" : "Edit"}
-                    </Button>
-                  </div>
-
-                  {isEditingDellAdvantages ? (
-                    <div className="space-y-4">
-                      {editableDellAdvantages.map((advantage, index) => (
-                        <div
-                          key={index}
-                          className="space-y-2 p-3 border rounded-lg"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              value={advantage.title}
-                              onChange={(e) =>
-                                dellAdvantageHelpers.updateTitle(
-                                  index,
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Advantage title"
-                              className="font-medium"
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => dellAdvantageHelpers.remove(index)}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <Input
-                            value={advantage.description}
-                            onChange={(e) =>
-                              dellAdvantageHelpers.updateDescription(
-                                index,
-                                e.target.value
-                              )
-                            }
-                            placeholder="Advantage description"
-                          />
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        onClick={dellAdvantageHelpers.add}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Advantage
-                      </Button>
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsEditingDellAdvantages(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={saveDellAdvantages}
-                          disabled={updateCompanyMutation.isPending}
-                        >
-                          {updateCompanyMutation.isPending ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : null}
-                          Save Changes
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {editableDellAdvantages.map((advantage, index) => (
-                        <div
-                          key={index}
-                          className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
-                        >
-                          <div className="text-sm font-medium text-green-800 dark:text-green-200">
-                            {advantage.title}
-                          </div>
-                          <div className="text-sm text-green-600 dark:text-green-300 mt-1">
-                            {advantage.description}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-
-                {/* Threats & Risks */}
-                <Card className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-lg font-semibold flex items-center">
-                      <div className="w-3 h-3 bg-orange-500 rounded-full mr-3"></div>
-                      Threats & Risks
-                    </h4>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditingThreats(!isEditingThreats)}
-                    >
-                      <Edit3 className="w-3 h-3 mr-2" />
-                      {isEditingThreats ? "Cancel" : "Edit"}
-                    </Button>
-                  </div>
-
-                  {isEditingThreats ? (
-                    <div className="space-y-4">
-                      {editableThreats.map((threat, index) => (
-                        <div
-                          key={index}
-                          className="space-y-2 p-3 border rounded-lg"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              value={threat.title}
-                              onChange={(e) =>
-                                threatHelpers.updateTitle(index, e.target.value)
-                              }
-                              placeholder="Threat/Risk title"
-                              className="font-medium"
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => threatHelpers.remove(index)}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <Input
-                            value={threat.description}
-                            onChange={(e) =>
-                              threatHelpers.updateDescription(
-                                index,
-                                e.target.value
-                              )
-                            }
-                            placeholder="Impact/Description"
-                          />
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        onClick={threatHelpers.add}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Threat
-                      </Button>
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsEditingThreats(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={saveThreats}
-                          disabled={updateCompanyMutation.isPending}
-                        >
-                          {updateCompanyMutation.isPending ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : null}
-                          Save Changes
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {editableThreats.map((threat, index) => (
-                        <div
-                          key={index}
-                          className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800"
-                        >
-                          <div className="text-sm font-medium text-orange-800 dark:text-orange-200">
-                            {threat.title}
-                          </div>
-                          <div className="text-sm text-orange-600 dark:text-orange-300 mt-1">
-                            {threat.description}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              </div>
-
-              {/* Competitive Strategy */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-lg font-semibold flex items-center">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                      Differentiation Strategy
-                    </h4>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setIsEditingDifferentiation(!isEditingDifferentiation)
-                      }
-                    >
-                      <Edit3 className="w-3 h-3 mr-2" />
-                      {isEditingDifferentiation ? "Cancel" : "Edit"}
-                    </Button>
-                  </div>
-
-                  {isEditingDifferentiation ? (
-                    <div className="space-y-4">
-                      {editableDifferentiation.map((diff, index) => (
-                        <div
-                          key={index}
-                          className="space-y-2 p-3 border rounded-lg"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              value={diff.title}
-                              onChange={(e) =>
-                                differentiationHelpers.updateTitle(
-                                  index,
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Differentiation point"
-                              className="font-medium"
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                differentiationHelpers.remove(index)
-                              }
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <Input
-                            value={diff.description}
-                            onChange={(e) =>
-                              differentiationHelpers.updateDescription(
-                                index,
-                                e.target.value
-                              )
-                            }
-                            placeholder="Competitive advantage"
-                          />
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        onClick={differentiationHelpers.add}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Differentiator
-                      </Button>
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsEditingDifferentiation(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={saveDifferentiation}
-                          disabled={updateCompanyMutation.isPending}
-                        >
-                          {updateCompanyMutation.isPending ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : null}
-                          Save Changes
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {editableDifferentiation.map((diff, index) => (
-                        <div
-                          key={index}
-                          className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
-                        >
-                          <div className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                            {diff.title}
-                          </div>
-                          <div className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                            {diff.description}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-
-                <Card className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-lg font-semibold flex items-center">
-                      <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-                      Win Strategy
-                    </h4>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setIsEditingWinStrategy(!isEditingWinStrategy)
-                      }
-                    >
-                      <Edit3 className="w-3 h-3 mr-2" />
-                      {isEditingWinStrategy ? "Cancel" : "Edit"}
-                    </Button>
-                  </div>
-
-                  {isEditingWinStrategy ? (
-                    <div className="space-y-4">
-                      {editableWinStrategy.map((strategy, index) => (
-                        <div
-                          key={index}
-                          className="space-y-2 p-3 border rounded-lg"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              value={strategy.title}
-                              onChange={(e) =>
-                                winStrategyHelpers.updateTitle(
-                                  index,
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Strategy step"
-                              className="font-medium"
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => winStrategyHelpers.remove(index)}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <Input
-                            value={strategy.description}
-                            onChange={(e) =>
-                              winStrategyHelpers.updateDescription(
-                                index,
-                                e.target.value
-                              )
-                            }
-                            placeholder="Strategy description"
-                          />
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        onClick={winStrategyHelpers.add}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Strategy
-                      </Button>
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsEditingWinStrategy(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={saveWinStrategy}
-                          disabled={updateCompanyMutation.isPending}
-                        >
-                          {updateCompanyMutation.isPending ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : null}
-                          Save Changes
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {editableWinStrategy.map((strategy, index) => (
-                        <div
-                          key={index}
-                          className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg"
-                        >
-                          <div className="text-sm font-medium text-purple-800 dark:text-purple-200">
-                            {strategy.title}
-                          </div>
-                          <div className="text-sm text-purple-600 dark:text-purple-300 mt-1">
-                            {strategy.description}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              </div>
-
-              {/* Detailed Analysis */}
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-lg font-semibold">
-                    Detailed Competitive Analysis
-                  </h4>
-                  <Button
                     variant="outline"
-                    onClick={() =>
-                      setIsEditingCompetitive(!isEditingCompetitive)
-                    }
+                    onClick={() => setIsEditingPersonnel(!isEditingPersonnel)}
                   >
                     <Edit3 className="w-4 h-4 mr-2" />
-                    {isEditingCompetitive ? "Cancel Edit" : "Edit Analysis"}
+                    {isEditingPersonnel ? "Cancel" : "Edit"}
                   </Button>
                 </div>
+              </div>
 
-                {isEditingCompetitive ? (
+              <Card className="p-6">
+                {isEditingPersonnel ? (
                   <div className="space-y-4">
-                    <Textarea
-                      value={manualCompetitive}
-                      onChange={(e) => setManualCompetitive(e.target.value)}
-                      placeholder="Enter detailed competitive analysis, market positioning, and strategic insights..."
-                      className="min-h-[300px] resize-none text-base leading-relaxed"
-                    />
-                    <div className="flex justify-end">
+                    {editablePersonnel.map((p, index) => (
+                      <div
+                        key={index}
+                        className="space-y-3 p-4 border rounded-lg"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <Input
+                            value={p.name}
+                            onChange={(e) =>
+                              updatePersonnelField(
+                                index,
+                                "name",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Full name"
+                          />
+                          <Input
+                            value={p.title}
+                            onChange={(e) =>
+                              updatePersonnelField(
+                                index,
+                                "title",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Job title"
+                          />
+                          <Input
+                            value={p.email || ""}
+                            onChange={(e) =>
+                              updatePersonnelField(
+                                index,
+                                "email",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Email"
+                          />
+                          <Input
+                            value={p.phone || ""}
+                            onChange={(e) =>
+                              updatePersonnelField(
+                                index,
+                                "phone",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Phone"
+                          />
+                        </div>
+                        <Textarea
+                          value={p.notes || ""}
+                          onChange={(e) =>
+                            updatePersonnelField(index, "notes", e.target.value)
+                          }
+                          placeholder="Notes (e.g., involvement in digital twin, interests, responsibilities)"
+                          className="min-h-[80px]"
+                        />
+                        <div className="flex justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removePersonnel(index)}
+                          >
+                            <X className="w-4 h-4 mr-1" /> Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex gap-3">
+                      <Button variant="outline" onClick={addPersonnel}>
+                        <Plus className="w-4 h-4 mr-2" /> Add Person
+                      </Button>
                       <Button
-                        onClick={saveCompetitive}
+                        onClick={savePersonnel}
                         disabled={updateCompanyMutation.isPending}
                       >
                         {updateCompanyMutation.isPending ? (
@@ -2879,26 +2496,43 @@ export default function CompanyDetailsPage() {
                         ) : (
                           <Save className="w-4 h-4 mr-2" />
                         )}
-                        Save Analysis
+                        Save Changes
                       </Button>
                     </div>
                   </div>
-                ) : company.competitiveAnalysis || manualCompetitive ? (
-                  <div className="prose prose-base max-w-none">
-                    <div className="text-base leading-relaxed p-4 bg-secondary/20 rounded-lg">
-                      {renderMarkdownText(company.competitiveAnalysis || manualCompetitive)}
-                    </div>
-                  </div>
                 ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg">
-                      No detailed competitive analysis available
-                    </p>
-                    <p className="text-sm mt-2">
-                      Click &quot;Generate AI Analysis&quot; for comprehensive
-                      competitive intelligence
-                    </p>
+                  <div className="space-y-3">
+                    {(company as any).personnel &&
+                    (company as any).personnel.length > 0 ? (
+                      (company as any).personnel.map(
+                        (p: any, index: number) => (
+                          <div
+                            key={index}
+                            className="p-4 rounded-lg bg-secondary/30"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="font-medium text-card-foreground">
+                                {p.name}
+                              </div>
+                              <Badge>{p.title}</Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {p.email && (
+                                <span className="mr-3">{p.email}</span>
+                              )}
+                              {p.phone && <span>{p.phone}</span>}
+                            </div>
+                            {p.notes && (
+                              <div className="text-sm mt-2">{p.notes}</div>
+                            )}
+                          </div>
+                        )
+                      )
+                    ) : (
+                      <p className="text-muted-foreground">
+                        No personnel added
+                      </p>
+                    )}
                   </div>
                 )}
               </Card>

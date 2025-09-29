@@ -6,6 +6,7 @@ import { z } from "zod";
 export const companies = pgTable("companies", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
+  type: text("type"),
   industry: text("industry").notNull(),
   country: text("country").notNull(),
   employees: integer("employees"),
@@ -34,6 +35,7 @@ export const companies = pgTable("companies", {
   threats: jsonb("threats").$type<Array<{title: string, description: string}>>().default([]),
   differentiation: jsonb("differentiation").$type<Array<{title: string, description: string}>>().default([]),
   winStrategy: jsonb("win_strategy").$type<Array<{title: string, description: string}>>().default([]),
+  personnel: jsonb("personnel").$type<Array<{name: string, title: string, email?: string, phone?: string, notes?: string}>>().default([]),
 });
 
 export const activityLogs = pgTable("activity_logs", {
@@ -85,7 +87,7 @@ export const digitalTwinStatuses = [
 
 export const industries = [
   "Manufacturing",
-  "Automotive", 
+  "Automotive",
   "Healthcare",
   "Energy",
   "Aerospace",
@@ -94,4 +96,29 @@ export const industries = [
   "Financial Services",
   "Retail",
   "Other"
+] as const;
+
+export const companyTypes = [
+  "STARTUP",
+  "SME",
+  "MNC",
+  "ENTERPRISE",
+  "CORPORATION",
+  "LLC",
+  "PARTNERSHIP",
+  "SOLE_PROPRIETORSHIP",
+  "NON_PROFIT",
+  "GOVERNMENT",
+  "PUBLIC_COMPANY",
+  "PRIVATE_COMPANY",
+  "UNICORN",
+  "SCALE_UP",
+  "FAMILY_BUSINESS",
+  "COOPERATIVE",
+  "JOINT_VENTURE",
+  "SUBSIDIARY",
+  "HOLDING_COMPANY",
+  "CONSULTANCY",
+  "FREELANCER",
+  "OTHER"
 ] as const;

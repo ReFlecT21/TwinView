@@ -157,6 +157,7 @@ export class MemStorage implements IStorage {
     const company: Company = {
       id,
       name: insertCompany.name,
+      type: insertCompany.type ?? null,
       industry: insertCompany.industry,
       country: insertCompany.country,
       employees: insertCompany.employees ?? null,
@@ -185,6 +186,7 @@ export class MemStorage implements IStorage {
       threats: null,
       differentiation: null,
       winStrategy: null,
+      personnel: null,
     };
     this.companies.set(id, company);
     return company;
