@@ -98,3 +98,81 @@ model TeamMember {
 
   @@map("team_members")
 }
+
+enum ISVVertical {
+  manufacturing
+  smart_cities
+  healthcare
+}
+
+enum ISVSize {
+  startup
+  small
+  medium
+  large
+  enterprise
+}
+
+enum ISVMaturityStage {
+  Early
+  Growth
+  Mature
+  Leader
+}
+
+enum ISVInterestLevel {
+  high
+  medium
+  low
+  growing
+}
+
+enum ISVRegion {
+  APAC
+  EMEA
+  Americas
+}
+
+model ISVStartup {
+  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar
+  name                    String
+  vertical                ISVVertical
+
+  // Geographic Info
+  headquarters            String?
+  presence                String[]            @default([])
+  regions                 ISVRegion[]         @default([])
+  coordinates             Json?
+
+  // Size & Scale
+  size                    ISVSize?
+  maturityStage           ISVMaturityStage?
+  employees               Int?
+  accounts                Int?
+  revenue                 String?
+
+  // Openness & Compatibility
+  hasOpenAPIs             Boolean             @default(false)
+  integrations            String[]            @default([])
+  dellValidated           Boolean             @default(false)
+  consortiumMemberships   String[]            @default([])
+  certifications          String[]            @default([])
+
+  // Interest & Strategic Value
+  interestLevel           ISVInterestLevel?
+  interestReasons         String[]            @default([])
+  caseStudies             Json                @default("[]")
+  strategicValue          String?
+
+  // Partnership Potential
+  matchedPartners         String[]            @default([])
+  synergyScores           Json                @default("{}")
+  collaborationTypes      String[]            @default([])
+
+  // Metadata
+  notes                   String?
+  createdAt               DateTime?           @default(now())
+  updatedAt               DateTime?           @default(now())
+
+  @@map("isv_startups")
+}

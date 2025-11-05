@@ -7,7 +7,8 @@ import {
   BarChart3,
   FileText,
   Users,
-  LogOut
+  LogOut,
+  Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Companies", href: "/companies", icon: Building2 },
+  { name: "ISV/Startups", href: "/isv-startups", icon: Globe },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Reports", href: "/reports", icon: FileText },
   { name: "Team", href: "/team", icon: Users },

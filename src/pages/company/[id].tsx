@@ -36,11 +36,15 @@ import {
   GitCompare,
   Kanban,
   Target,
+  Globe,
+  Link,
+  TrendingUp,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { trpc } from "@/lib/trpc";
 import { ScoringDashboard } from "@/components/scoring/ScoringDashboard";
 import { ComparisonView } from "@/components/scoring/ComparisonView";
+import { ISVPartnersTab } from "@/components/isv/ISVPartnersTab";
 import {
   getScoreColor,
   getScoreLabel,
@@ -1035,7 +1039,7 @@ export default function CompanyDetailsPage() {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-4 mb-8 h-14 p-0 bg-muted rounded-lg">
+            <TabsList className="grid w-full grid-cols-5 mb-8 h-14 p-0 bg-muted rounded-lg">
               <TabsTrigger
                 value="scoring"
                 className="text-sm py-4 px-3 data-[state=active]:bg-background rounded-md mx-1 flex items-center gap-2"
@@ -1056,6 +1060,13 @@ export default function CompanyDetailsPage() {
               >
                 <FileText className="w-4 h-4" />
                 <span className="hidden md:inline">Evidence</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="isv-partners"
+                className="text-sm py-4 px-3 data-[state=active]:bg-background rounded-md mx-1 flex items-center gap-2"
+              >
+                <Globe className="w-4 h-4" />
+                <span className="hidden md:inline">ISV Partners</span>
               </TabsTrigger>
               <TabsTrigger
                 value="personnel"
@@ -2510,6 +2521,11 @@ export default function CompanyDetailsPage() {
                   </div>
                 )}
               </Card>
+            </TabsContent>
+
+            {/* ISV Partners Tab */}
+            <TabsContent value="isv-partners" className="space-y-6">
+              <ISVPartnersTab companyId={company.id} company={company} />
             </TabsContent>
 
             <TabsContent value="personnel" className="space-y-6">

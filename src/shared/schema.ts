@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -137,36 +137,62 @@ export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
   timestamp: true,
 });
 
+// ISV/Startup Schema - moved before its usage
+export const isvStartups = pgTable("isv_startups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  vertical: text("vertical").notNull(), // manufacturing, smart_cities, healthcare
+
+  // Geographic Info
+  headquarters: text("headquarters"),
+  presence: jsonb("presence").$type<string[]>().default([]), // countries
+  regions: jsonb("regions").$type<string[]>().default([]), // APAC, EMEA, Americas
+  coordinates: jsonb("coordinates").$type<{ lat: number; lng: number }>(),
+
+  // Size & Scale
+  size: text("size"), // startup, small, medium, large, enterprise
+  maturityStage: text("maturity_stage"), // Early, Growth, Mature, Leader
+  employees: integer("employees"),
+  accounts: integer("accounts"),
+  revenue: text("revenue"),
+
+  // Openness & Compatibility
+  hasOpenAPIs: boolean("has_open_apis").default(false),
+  integrations: jsonb("integrations").$type<string[]>().default([]), // NVIDIA, Azure, AWS, etc
+  dellValidated: boolean("dell_validated").default(false),
+  consortiumMemberships: jsonb("consortium_memberships").$type<string[]>().default([]),
+  certifications: jsonb("certifications").$type<string[]>().default([]),
+
+  // Interest & Strategic Value
+  interestLevel: text("interest_level"), // high, medium, low, growing
+  interestReasons: jsonb("interest_reasons").$type<string[]>().default([]),
+  caseStudies: jsonb("case_studies").$type<Array<{
+    title: string;
+    location: string;
+    description: string;
+  }>>().default([]),
+  strategicValue: text("strategic_value"),
+
+  // Partnership Potential
+  matchedPartners: jsonb("matched_partners").$type<string[]>().default([]), // Company IDs
+  synergyScores: jsonb("synergy_scores").$type<Record<string, number>>().default({}),
+  collaborationTypes: jsonb("collaboration_types").$type<string[]>().default([]),
+
+  // Metadata
+  notes: text("notes"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
 export const insertTeamMemberSchema = createInsertSchema(teamMembers).omit({
   joinedAt: true,
 });
 
-export type InsertCompany = z.infer<typeof insertCompanySchema>;
-export type Company = typeof companies.$inferSelect;
-export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
-export type ActivityLog = typeof activityLogs.$inferSelect;
-export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
-export type TeamMember = typeof teamMembers.$inferSelect;
-
-export const digitalTwinStatuses = [
-  "not_started",
-  "researching", 
-  "implementing",
-  "completed"
-] as const;
-
-export const industries = [
-  "Manufacturing",
-  "Automotive",
-  "Healthcare",
-  "Energy",
-  "Aerospace",
-  "Chemicals",
-  "Technology",
-  "Financial Services",
-  "Retail",
-  "Other"
-] as const;
+export const insertISVStartupSchema = createInsertSchema(isvStartups).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
 export const companyTypes = [
   "STARTUP",
@@ -192,3 +218,70 @@ export const companyTypes = [
   "FREELANCER",
   "OTHER"
 ] as const;
+
+export const industries = [
+  "Manufacturing",
+  "Healthcare",
+  "Technology",
+  "Energy",
+  "Automotive",
+  "Aerospace",
+  "Chemicals",
+  "Financial Services",
+  "Retail",
+  "Telecommunications",
+  "Construction",
+  "Agriculture",
+  "Transportation",
+  "Education",
+  "Media & Entertainment",
+  "Hospitality",
+  "Real Estate",
+  "Professional Services",
+  "Government",
+  "Other"
+] as const;
+
+export const isvVerticals = [
+  "manufacturing",
+  "smart_cities",
+  "healthcare"
+] as const;
+
+export const isvSizes = [
+  "startup",
+  "small",
+  "medium",
+  "large",
+  "enterprise"
+] as const;
+
+export const isvMaturityStages = [
+  "Early",
+  "Growth",
+  "Mature",
+  "Leader"
+] as const;
+
+export const isvInterestLevels = [
+  "high",
+  "medium",
+  "low",
+  "growing"
+] as const;
+
+export const isvRegions = [
+  "APAC",
+  "EMEA",
+  "Americas"
+] as const;
+
+// Type exports
+export type InsertCompany = z.infer<typeof insertCompanySchema>;
+export type Company = typeof companies.$inferSelect;
+export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
+export type ActivityLog = typeof activityLogs.$inferSelect;
+export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type InsertISVStartup = z.infer<typeof insertISVStartupSchema>;
+export type ISVStartup = typeof isvStartups.$inferSelect;
