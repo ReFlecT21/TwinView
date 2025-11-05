@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { router, publicProcedure, getCurrentUserInfo } from '../trpc';
 import { generateCompetitiveAnalysis, generateOpportunityAssessment, generateDigitalTwinStrategy } from '../openai';
 import { companyTypes } from '@shared/schema';
+import { calculateTotalScore, calculateRevenuePotentialScore } from '@/lib/scoring';
 
 const createCompanySchema = z.object({
   name: z.string(),
@@ -33,12 +34,22 @@ const createCompanySchema = z.object({
   differentiation: z.array(z.object({title: z.string(), description: z.string()})).default([]),
   winStrategy: z.array(z.object({title: z.string(), description: z.string()})).default([]),
   personnel: z.array(z.object({
-    name: z.string(),
-    title: z.string(),
-    email: z.string().email().optional(),
+    name: z.string().min(1, "Name is required"),
+    title: z.string().optional(),
+    email: z.string().email().optional().or(z.literal('')),
     phone: z.string().optional(),
+    linkedinUrl: z.string().optional(),
     notes: z.string().optional(),
   })).default([]),
+  // New LTTS criteria fields
+  projects: z.array(z.string()).default([]),
+  dataReliability: z.string().optional(),
+  industryDetails: z.string().optional(),
+  existingRelations: z.string().optional(),
+  revenuePotential: z.string().optional(),
+  marketSizeGrowth: z.string().optional(),
+  partnerMarketAccess: z.string().optional(),
+  solutionMaturitySalesReadiness: z.string().optional(),
 });
 
 export const companiesRouter = router({
@@ -305,5 +316,112 @@ export const companiesRouter = router({
       });
 
       return { strategy: strategyResult, company };
+    }),
+
+  updateScores: publicProcedure
+    .input(z.object({
+      id: z.string(),
+      scores: z.object({
+        dataReliability: z.number().min(1).max(5).optional(),
+        dataReliabilityEvidence: z.array(z.string()).optional(),
+        existingRelations: z.number().min(1).max(5).optional(),
+        existingRelationsEvidence: z.array(z.string()).optional(),
+        industry: z.number().min(1).max(5).optional(),
+        industryEvidence: z.array(z.string()).optional(),
+        projects: z.number().min(1).max(5).optional(),
+        projectsEvidence: z.array(z.string()).optional(),
+        partnerMarketAccess: z.number().min(1).max(5).optional(),
+        partnerMarketAccessEvidence: z.array(z.string()).optional(),
+        solutionMaturity: z.number().min(1).max(5).optional(),
+        solutionMaturityEvidence: z.array(z.string()).optional(),
+        partnerScale: z.number().min(1).max(5).optional(),
+        partnerScaleEvidence: z.array(z.string()).optional(),
+        growthMomentum: z.number().min(1).max(5).optional(),
+        growthMomentumEvidence: z.array(z.string()).optional(),
+        investmentReadiness: z.number().min(1).max(5).optional(),
+        investmentReadinessEvidence: z.array(z.string()).optional(),
+      }),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Get current company scores
+      const currentCompany = await ctx.prisma.company.findUnique({
+        where: { id: input.id },
+      });
+
+      if (!currentCompany) {
+        throw new Error('Company not found');
+      }
+
+      // Get current user info
+      const userInfo = await getCurrentUserInfo(ctx);
+
+      // Merge with existing scores
+      const currentScores = currentCompany.scores || {};
+      const updatedScores = {
+        ...currentScores,
+        ...input.scores,
+        lastUpdated: new Date().toISOString(),
+        updatedBy: userInfo.userName,
+      };
+
+      // Calculate revenue potential and total score
+      updatedScores.revenuePotential = calculateRevenuePotentialScore(updatedScores);
+      updatedScores.totalScore = calculateTotalScore(updatedScores);
+
+      // Update score history
+      const scoreHistory = currentCompany.scoreHistory || [];
+      const changedFields = Object.keys(input.scores).filter(key => !key.includes('Evidence'));
+
+      scoreHistory.push({
+        date: new Date().toISOString(),
+        totalScore: updatedScores.totalScore,
+        changedBy: userInfo.userName,
+        changes: `Updated ${changedFields.join(', ')}`,
+      });
+
+      // Update company with new scores
+      const company = await ctx.prisma.company.update({
+        where: { id: input.id },
+        data: {
+          scores: updatedScores,
+          scoreHistory: scoreHistory.slice(-20), // Keep last 20 history entries
+        },
+        include: { activityLogs: true },
+      });
+
+      // Create activity log
+      await ctx.prisma.activityLog.create({
+        data: {
+          companyId: company.id,
+          userId: userInfo.userId,
+          userName: userInfo.userName,
+          action: 'scores_updated',
+          description: `Updated scoring for ${company.name} - New total: ${updatedScores.totalScore.toFixed(2)}`,
+        },
+      });
+
+      return company;
+    }),
+
+  compareCompanies: publicProcedure
+    .input(z.object({
+      companyIds: z.array(z.string()).min(2).max(4),
+    }))
+    .query(async ({ ctx, input }) => {
+      const companies = await ctx.prisma.company.findMany({
+        where: {
+          id: { in: input.companyIds },
+        },
+      });
+
+      return companies.map(company => ({
+        id: company.id,
+        name: company.name,
+        industry: company.industry,
+        scores: company.scores || {},
+        type: company.type,
+        employees: company.employees,
+        country: company.country,
+      }));
     }),
 });

@@ -26,17 +26,27 @@ import { Company } from "@shared/schema";
 import {
   ArrowLeft,
   Loader2,
-  Brain,
-  Target,
-  Kanban,
   Edit3,
   Save,
-  FileText,
   Plus,
   X,
+  BarChart3,
+  Users,
+  FileText,
+  GitCompare,
+  Kanban,
+  Target,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { trpc } from "@/lib/trpc";
+import { ScoringDashboard } from "@/components/scoring/ScoringDashboard";
+import { ComparisonView } from "@/components/scoring/ComparisonView";
+import {
+  getScoreColor,
+  getScoreLabel,
+  formatScore,
+  getScoreEmoji,
+} from "@/lib/scoring";
 
 const statusColors = {
   not_started: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
@@ -126,7 +136,7 @@ function processBoldText(text: string) {
 export default function CompanyDetailsPage() {
   const router = useRouter();
   const { id } = router.query;
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("scoring");
   const { toast } = useToast();
   const utils = trpc.useUtils();
 
@@ -260,7 +270,11 @@ export default function CompanyDetailsPage() {
     data: company,
     isLoading,
     error,
+    refetch,
   } = trpc.companies.getById.useQuery({ id: id as string }, { enabled: !!id });
+
+  // Fetch all companies for comparison
+  const { data: allCompanies = [] } = trpc.companies.getAll.useQuery();
 
   // Initialize manual content when company changes
   useEffect(() => {
@@ -1023,32 +1037,134 @@ export default function CompanyDetailsPage() {
           >
             <TabsList className="grid w-full grid-cols-4 mb-8 h-14 p-0 bg-muted rounded-lg">
               <TabsTrigger
-                value="overview"
-                className="text-base py-4 px-4 data-[state=active]:bg-background rounded-md mx-1"
+                value="scoring"
+                className="text-sm py-4 px-3 data-[state=active]:bg-background rounded-md mx-1 flex items-center gap-2"
               >
-                Overview
+                <BarChart3 className="w-4 h-4" />
+                <span className="hidden md:inline">Scoring</span>
               </TabsTrigger>
               <TabsTrigger
-                value="strategy"
-                className="text-base py-4 px-4 data-[state=active]:bg-background rounded-md mx-1"
+                value="comparison"
+                className="text-sm py-4 px-3 data-[state=active]:bg-background rounded-md mx-1 flex items-center gap-2"
               >
-                Digital Twin Kanban
+                <GitCompare className="w-4 h-4" />
+                <span className="hidden md:inline">Compare</span>
               </TabsTrigger>
               <TabsTrigger
-                value="dell-opportunity"
-                className="text-base py-4 px-4 data-[state=active]:bg-background rounded-md mx-1"
+                value="evidence"
+                className="text-sm py-4 px-3 data-[state=active]:bg-background rounded-md mx-1 flex items-center gap-2"
               >
-                Dell Opportunity
+                <FileText className="w-4 h-4" />
+                <span className="hidden md:inline">Evidence</span>
               </TabsTrigger>
               <TabsTrigger
                 value="personnel"
-                className="text-base py-4 px-4 data-[state=active]:bg-background rounded-md mx-1"
+                className="text-sm py-4 px-3 data-[state=active]:bg-background rounded-md mx-1 flex items-center gap-2"
               >
-                Personnel
+                <Users className="w-4 h-4" />
+                <span className="hidden md:inline">People</span>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-8">
+            {/* Scoring Dashboard Tab */}
+            <TabsContent value="scoring">
+              <ScoringDashboard
+                company={company}
+                onUpdate={() => {
+                  refetch();
+                  utils.companies.invalidate();
+                }}
+              />
+            </TabsContent>
+
+            {/* Comparison Tab */}
+            <TabsContent value="comparison">
+              <ComparisonView
+                companies={allCompanies}
+                initialCompanyId={company.id}
+              />
+            </TabsContent>
+
+            {/* Evidence Tab */}
+            <TabsContent value="evidence" className="space-y-6">
+              <Card className="p-6">
+                <h3 className="text-xl font-semibold mb-6">Evidence & Justifications</h3>
+
+                {/* Evidence for each score */}
+                <div className="space-y-6">
+                  {company.scores?.dataReliabilityEvidence && company.scores.dataReliabilityEvidence.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        Data Reliability
+                        <Badge variant="secondary">
+                          {formatScore(company.scores.dataReliability)} / 5
+                        </Badge>
+                      </h4>
+                      <div className="space-y-2">
+                        {company.scores.dataReliabilityEvidence.map((evidence, idx) => (
+                          <div key={idx} className="flex items-start gap-2 p-3 bg-secondary/30 rounded-lg">
+                            <span className="text-primary mt-1">•</span>
+                            <span className="text-sm">{evidence}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {company.scores?.industryEvidence && company.scores.industryEvidence.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        Industry Fit
+                        <Badge variant="secondary">
+                          {formatScore(company.scores.industry)} / 5
+                        </Badge>
+                      </h4>
+                      <div className="space-y-2">
+                        {company.scores.industryEvidence.map((evidence, idx) => (
+                          <div key={idx} className="flex items-start gap-2 p-3 bg-secondary/30 rounded-lg">
+                            <span className="text-primary mt-1">•</span>
+                            <span className="text-sm">{evidence}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {company.scores?.existingRelationsEvidence && company.scores.existingRelationsEvidence.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        Existing Relations
+                        <Badge variant="secondary">
+                          {formatScore(company.scores.existingRelations)} / 5
+                        </Badge>
+                      </h4>
+                      <div className="space-y-2">
+                        {company.scores.existingRelationsEvidence.map((evidence, idx) => (
+                          <div key={idx} className="flex items-start gap-2 p-3 bg-secondary/30 rounded-lg">
+                            <span className="text-primary mt-1">•</span>
+                            <span className="text-sm">{evidence}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {(!company.scores ||
+                    ((!company.scores.dataReliabilityEvidence || company.scores.dataReliabilityEvidence.length === 0) &&
+                     (!company.scores.industryEvidence || company.scores.industryEvidence.length === 0) &&
+                     (!company.scores.existingRelationsEvidence || company.scores.existingRelationsEvidence.length === 0))) && (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No evidence points added yet.</p>
+                      <p className="text-sm mt-2">Go to the Scoring tab to add evidence for each criterion.</p>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </TabsContent>
+
+            {/* Keep old tabs hidden for now but available */}
+            <TabsContent value="overview" className="space-y-8" style={{display: 'none'}}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card className="p-6">
                   <div className="flex justify-between items-center mb-6">
