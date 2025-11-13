@@ -69,7 +69,8 @@ model Company {
   winStrategy          Json     @default("[]")
   personnel            Json     @default("[]")
 
-  activityLogs ActivityLog[]
+  activityLogs   ActivityLog[]
+  newsMatches    NewsCompanyMatch[]
 
   @@map("companies")
 }
@@ -175,4 +176,72 @@ model ISVStartup {
   updatedAt               DateTime?           @default(now())
 
   @@map("isv_startups")
+}
+
+enum NewsSourceType {
+  NEWS_ARTICLE
+  PRESS_RELEASE
+  BLOG
+  RESEARCH_PAPER
+  SOCIAL_MEDIA
+  OTHER
+}
+
+model NewsArticle {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar
+  title         String
+  content       String          @db.Text
+  summary       String?         @db.Text
+  url           String          @unique
+  sourceType    NewsSourceType  @default(NEWS_ARTICLE)
+  sourceName    String
+  author        String?
+  imageUrl      String?
+  publishedAt   DateTime
+  fetchedAt     DateTime        @default(now())
+  keywords      String[]        @default([])
+
+  // Relationships
+  companyMatches NewsCompanyMatch[]
+
+  @@index([publishedAt])
+  @@index([sourceType])
+  @@map("news_articles")
+}
+
+model NewsCompanyMatch {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar
+  newsArticleId   String       @db.VarChar
+  companyId       String       @db.VarChar
+  relevanceScore  Float        @default(1.0)
+  matchReason     String?      // e.g., "Company name mentioned 3 times"
+  isRead          Boolean      @default(false)
+  notifiedAt      DateTime?
+  createdAt       DateTime     @default(now())
+
+  // Relationships
+  newsArticle     NewsArticle  @relation(fields: [newsArticleId], references: [id], onDelete: Cascade)
+  company         Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([newsArticleId, companyId])
+  @@index([companyId, isRead])
+  @@index([createdAt])
+  @@map("news_company_matches")
+}
+
+enum DigestFrequency {
+  DAILY
+  WEEKLY
+  DISABLED
+}
+
+model UserNotificationPreferences {
+  id              String          @id @db.VarChar  // Clerk user ID
+  digestFrequency DigestFrequency @default(DAILY)
+  lastDigestSent  DateTime?
+  emailEnabled    Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("user_notification_preferences")
 }

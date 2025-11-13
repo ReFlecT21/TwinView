@@ -8,16 +8,20 @@ import {
   FileText,
   Users,
   LogOut,
-  Globe
+  Globe,
+  Newspaper
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { trpc } from "@/lib/trpc";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Companies", href: "/companies", icon: Building2 },
   { name: "ISV/Startups", href: "/isv-startups", icon: Globe },
+  { name: "News", href: "/news", icon: Newspaper, hasBadge: true },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Reports", href: "/reports", icon: FileText },
   { name: "Team", href: "/team", icon: Users },
@@ -27,6 +31,12 @@ export default function Sidebar() {
   const router = useRouter();
   const location = router.pathname;
   const { user } = useUser();
+
+  // Fetch unread news count
+  const { data: unreadData } = trpc.news.getUnreadCount.useQuery({}, {
+    refetchInterval: 60000, // Refetch every minute
+  });
+  const unreadCount = unreadData?.count || 0;
 
   return (
     <aside className="w-64 bg-card border-r border-border flex-shrink-0">
@@ -49,15 +59,22 @@ export default function Sidebar() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "flex items-center space-x-3 p-3 rounded-md font-medium transition-colors",
+                  "flex items-center justify-between p-3 rounded-md font-medium transition-colors",
                   isActive
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 )}
                 data-testid={`nav-${item.name.toLowerCase()}`}
               >
-                <item.icon className="w-5 h-5" />
-                <span>{item.name}</span>
+                <div className="flex items-center space-x-3">
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.name}</span>
+                </div>
+                {item.hasBadge && unreadCount > 0 && (
+                  <Badge variant="destructive" className="ml-auto">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Badge>
+                )}
               </Link>
             );
           })}

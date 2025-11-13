@@ -5,6 +5,7 @@ import KPICards from "@/components/dashboard/kpi-cards";
 import FiltersSection from "@/components/dashboard/filters-section";
 import CompanyCard from "@/components/dashboard/company-card";
 import ActivityFeed from "@/components/dashboard/activity-feed";
+import RecentNewsWidget from "@/components/dashboard/recent-news-widget";
 import CompanyForm from "@/components/company/company-form";
 import { Company } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -128,6 +129,9 @@ export default function Dashboard() {
             )}
           </div>
         )}
+
+        {/* Recent News Widget */}
+        <RecentNewsWidget />
 
         {/* Activity Feed */}
         {activitiesLoading ? (
