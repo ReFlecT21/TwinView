@@ -6,6 +6,7 @@ import FiltersSection from "@/components/dashboard/filters-section";
 import CompanyCard from "@/components/dashboard/company-card";
 import ActivityFeed from "@/components/dashboard/activity-feed";
 import RecentNewsWidget from "@/components/dashboard/recent-news-widget";
+import { ValueChainDashboardWidget } from "@/components/dashboard/value-chain-widget";
 import CompanyForm from "@/components/company/company-form";
 import { Company } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -90,6 +91,12 @@ export default function Dashboard() {
           <KPICards analytics={analytics} />
         ) : null}
 
+        {/* Value Chain Widget */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ValueChainDashboardWidget />
+          <RecentNewsWidget />
+        </div>
+
         {/* Filters */}
         <FiltersSection
           searchQuery={searchQuery}
@@ -129,9 +136,6 @@ export default function Dashboard() {
             )}
           </div>
         )}
-
-        {/* Recent News Widget */}
-        <RecentNewsWidget />
 
         {/* Activity Feed */}
         {activitiesLoading ? (

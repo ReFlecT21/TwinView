@@ -69,8 +69,17 @@ model Company {
   winStrategy          Json     @default("[]")
   personnel            Json     @default("[]")
 
+  // Digital Twin Value Chain fields
+  valueChainStages     ValueChainStage[]  @default([])
+  primaryValueChainStage ValueChainStage?
+  dellProductsUsed     Json               @default("[]") // Array of DellProduct IDs
+  technologyStack      Json               @default("{}") // Tech stack by value chain stage
+  valueChainMaturity   Json               @default("{}") // Maturity score per stage
+  partnerEcosystem     Json               @default("[]") // Partner IDs by stage
+
   activityLogs   ActivityLog[]
   newsMatches    NewsCompanyMatch[]
+  companyDellProducts CompanyDellProduct[]
 
   @@map("companies")
 }
@@ -134,6 +143,41 @@ enum ISVRegion {
   Americas
 }
 
+// Digital Twin Value Chain Stages
+enum ValueChainStage {
+  DATA_CAPTURE_INGESTION
+  EDGE_PROCESSING
+  STORAGE_MANAGEMENT
+  COMPUTE_SIMULATION
+  VISUALIZATION_DECISION
+}
+
+// Dell Product Categories aligned with Value Chain
+enum DellProductCategory {
+  // Data Capture & Ingestion
+  NATIVE_EDGE_GATEWAYS
+  IOT_CONNECT
+
+  // Edge Processing
+  POWEREDGE_XE
+  EDGE_SERVERS
+
+  // Storage & Management
+  POWER_SCALE
+  POWERSTORE
+  POWERPROTECT
+
+  // Compute & Simulation
+  POWEREDGE_GPU
+  AI_FACTORY
+  OMNIVERSE_NVIDIA
+
+  // Visualization & Decision
+  CLOUD_INTEGRATION
+  DISPLAYS
+  ANALYTICS_PLATFORM
+}
+
 model ISVStartup {
   id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar
   name                    String
@@ -170,10 +214,20 @@ model ISVStartup {
   synergyScores           Json                @default("{}")
   collaborationTypes      String[]            @default([])
 
+  // Digital Twin Value Chain fields
+  valueChainStages        ValueChainStage[]  @default([])
+  primaryValueChainStage  ValueChainStage?
+  dellProductsSupported   Json               @default("[]") // Dell products this ISV supports
+  technologyOffering      Json               @default("{}") // Technologies offered by stage
+  valueChainCapabilities  Json               @default("{}") // Capabilities per stage
+  integrationPoints       Json               @default("[]") // Integration points with Dell stack
+
   // Metadata
   notes                   String?
   createdAt               DateTime?           @default(now())
   updatedAt               DateTime?           @default(now())
+
+  isvDellProducts         ISVDellProduct[]
 
   @@map("isv_startups")
 }
@@ -244,4 +298,73 @@ model UserNotificationPreferences {
   updatedAt       DateTime        @updatedAt
 
   @@map("user_notification_preferences")
+}
+
+// Dell Products Model
+model DellProduct {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar
+  name              String
+  category          DellProductCategory
+  valueChainStage   ValueChainStage
+  description       String?             @db.Text
+  features          String[]            @default([])
+  specifications    Json                @default("{}")
+  targetIndustries  String[]            @default([])
+  useCases          Json                @default("[]")
+  imageUrl          String?
+  productUrl        String?
+  isActive          Boolean             @default(true)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  // Relationships
+  companyProducts   CompanyDellProduct[]
+  isvProducts       ISVDellProduct[]
+
+  @@index([category])
+  @@index([valueChainStage])
+  @@map("dell_products")
+}
+
+// Junction table for Company-DellProduct relationship
+model CompanyDellProduct {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar
+  companyId        String       @db.VarChar
+  dellProductId    String       @db.VarChar
+  adoptionStatus   String       @default("evaluating") // evaluating, piloting, deployed, production
+  adoptionDate     DateTime?
+  usageScale       String?      // small, medium, large, enterprise
+  satisfaction     Int?         // 1-10 rating
+  notes            String?
+
+  // Relationships
+  company          Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  dellProduct      DellProduct  @relation(fields: [dellProductId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, dellProductId])
+  @@index([companyId])
+  @@index([dellProductId])
+  @@map("company_dell_products")
+}
+
+// Junction table for ISV-DellProduct relationship
+model ISVDellProduct {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar
+  isvId            String       @db.VarChar
+  dellProductId    String       @db.VarChar
+  integrationType  String       @default("compatible") // compatible, certified, optimized, native
+  certificationDate DateTime?
+  integrationLevel String?      // basic, advanced, deep, native
+  apiSupport       Boolean      @default(false)
+  documentation    String?
+  notes            String?
+
+  // Relationships
+  isv              ISVStartup   @relation(fields: [isvId], references: [id], onDelete: Cascade)
+  dellProduct      DellProduct  @relation(fields: [dellProductId], references: [id], onDelete: Cascade)
+
+  @@unique([isvId, dellProductId])
+  @@index([isvId])
+  @@index([dellProductId])
+  @@map("isv_dell_products")
 }

@@ -5,6 +5,7 @@ import { teamMembersRouter } from './teamMembers';
 import { analyticsRouter } from './analytics';
 import { isvStartupsRouter } from './isvStartups';
 import { newsRouter } from './news';
+import { dellProductsRouter } from './dellProducts';
 
 export const appRouter = router({
   companies: companiesRouter,
@@ -13,6 +14,7 @@ export const appRouter = router({
   analytics: analyticsRouter,
   isvStartups: isvStartupsRouter,
   news: newsRouter,
+  dellProducts: dellProductsRouter,
 });
 
 export type AppRouter = typeof appRouter;
