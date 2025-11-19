@@ -85,8 +85,8 @@ export function ISVPartnersTab({ companyId, company }: ISVPartnersTabProps) {
   // Sort ISVs by synergy score
   const sortedISVs = allISVs
     .map((isv) => ({
-      ...isv,
-      synergyScore: calculateSynergy(isv),
+      ...(isv as any),
+      synergyScore: calculateSynergy(isv as any),
     }))
     .sort((a, b) => b.synergyScore - a.synergyScore)
     .slice(0, 10); // Top 10 matches

@@ -187,7 +187,21 @@ export class MemStorage implements IStorage {
       differentiation: null,
       winStrategy: null,
       personnel: null,
-    };
+      // LTTS criteria fields
+      projects: null,
+      dataReliability: null,
+      industryDetails: null,
+      existingRelations: null,
+      revenuePotential: null,
+      marketSizeGrowth: null,
+      partnerMarketAccess: null,
+      solutionMaturitySalesReadiness: null,
+      // Scoring fields
+      scores: null,
+      scoreHistory: null,
+      comparisonNotes: null,
+      confidenceLevel: 3,
+    } as any;
     this.companies.set(id, company);
     return company;
   }

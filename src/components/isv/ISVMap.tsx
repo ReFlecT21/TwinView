@@ -105,7 +105,7 @@ export function ISVMap({ isvStartups, selectedVertical, onISVClick }: ISVMapProp
               <CircleMarker
                 key={isv.id}
                 center={[coords.lat, coords.lng]}
-                radius={getMarkerSize(isv.size)}
+                radius={getMarkerSize(isv.size ?? undefined)}
                 fillColor={getVerticalColor(isv.vertical)}
                 fillOpacity={0.7}
                 color={getVerticalColor(isv.vertical)}

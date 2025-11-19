@@ -75,7 +75,7 @@ export default function ISVDetailPage() {
         <div className="p-6">
           <Card className="p-12 text-center">
             <p className="text-lg text-muted-foreground mb-4">
-              The ISV/Startup you're looking for doesn't exist.
+              The ISV/Startup you&apos;re looking for doesn&apos;t exist.
             </p>
             <Button onClick={() => router.push("/isv-startups")}>
               Back to ISVs

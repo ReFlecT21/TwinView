@@ -150,9 +150,9 @@ export default function ISVStartupsPage() {
     if (!acc[isv.vertical]) {
       acc[isv.vertical] = [];
     }
-    acc[isv.vertical].push(isv);
+    acc[isv.vertical].push(isv as any);
     return acc;
-  }, {} as Record<string, ISVStartup[]>);
+  }, {} as Record<string, any[]>);
 
   return (
     <div className="flex flex-col h-full">
@@ -318,7 +318,7 @@ export default function ISVStartupsPage() {
           <>
             {activeView === "map" && (
               <ISVMap
-                isvStartups={isvStartups}
+                isvStartups={isvStartups as any}
                 selectedVertical={selectedVertical !== "all" ? selectedVertical : undefined}
                 onISVClick={handleISVClick}
               />
@@ -338,8 +338,8 @@ export default function ISVStartupsPage() {
                   isvStartups.map((isv) => (
                     <ISVCard
                       key={isv.id}
-                      isv={isv}
-                      onViewDetails={() => handleISVClick(isv)}
+                      isv={isv as any}
+                      onViewDetails={() => handleISVClick(isv as any)}
                       onMatchPartners={() => router.push(`/isv/${isv.id}/match`)}
                     />
                   ))

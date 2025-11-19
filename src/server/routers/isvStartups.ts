@@ -236,7 +236,7 @@ export const isvStartupsRouter = router({
         }
 
         // Scoring bonus
-        if (company.scores?.totalScore && company.scores.totalScore > 4) {
+        if ((company as any).scores?.totalScore && (company as any).scores.totalScore > 4) {
           synergyScore += 20;
           matchReasons.push('High partnership score');
         }

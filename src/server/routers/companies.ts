@@ -356,7 +356,7 @@ export const companiesRouter = router({
       const userInfo = await getCurrentUserInfo(ctx);
 
       // Merge with existing scores
-      const currentScores = currentCompany.scores || {};
+      const currentScores = (currentCompany as any).scores || {};
       const updatedScores = {
         ...currentScores,
         ...input.scores,
@@ -369,7 +369,7 @@ export const companiesRouter = router({
       updatedScores.totalScore = calculateTotalScore(updatedScores);
 
       // Update score history
-      const scoreHistory = currentCompany.scoreHistory || [];
+      const scoreHistory = (currentCompany as any).scoreHistory || [];
       const changedFields = Object.keys(input.scores).filter(key => !key.includes('Evidence'));
 
       scoreHistory.push({
@@ -385,7 +385,7 @@ export const companiesRouter = router({
         data: {
           scores: updatedScores,
           scoreHistory: scoreHistory.slice(-20), // Keep last 20 history entries
-        },
+        } as any,
         include: { activityLogs: true },
       });
 
@@ -418,7 +418,7 @@ export const companiesRouter = router({
         id: company.id,
         name: company.name,
         industry: company.industry,
-        scores: company.scores || {},
+        scores: (company as any).scores || {},
         type: company.type,
         employees: company.employees,
         country: company.country,

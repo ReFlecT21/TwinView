@@ -64,8 +64,8 @@ export default function Companies() {
 
   // Sort companies by total score
   const sortedCompanies = [...companies].sort((a, b) => {
-    const scoreA = a.scores?.totalScore || 3;
-    const scoreB = b.scores?.totalScore || 3;
+    const scoreA = (a as any).scores?.totalScore || 3;
+    const scoreB = (b as any).scores?.totalScore || 3;
     return scoreB - scoreA;
   });
 
@@ -231,7 +231,7 @@ export default function Companies() {
                   </TableRow>
                 ) : (
                   sortedCompanies.map((company, index) => {
-                    const scores = company.scores || {
+                    const scores = (company as any).scores || {
                       totalScore: 3,
                       revenuePotential: 3,
                       dataReliability: 3,
@@ -359,7 +359,7 @@ export default function Companies() {
               </div>
             ) : (
               sortedCompanies.map((company, index) => {
-                const scores = company.scores || {
+                const scores = (company as any).scores || {
                   totalScore: 3,
                   revenuePotential: 3,
                   dataReliability: 3,

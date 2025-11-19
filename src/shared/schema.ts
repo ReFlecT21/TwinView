@@ -242,6 +242,13 @@ export const industries = [
   "Other"
 ] as const;
 
+export const digitalTwinStatuses = [
+  "not_started",
+  "researching",
+  "implementing",
+  "completed"
+] as const;
+
 export const isvVerticals = [
   "manufacturing",
   "smart_cities",

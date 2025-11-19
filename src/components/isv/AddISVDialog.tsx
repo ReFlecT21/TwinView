@@ -39,7 +39,7 @@ export function AddISVDialog({ open, onOpenChange }: AddISVDialogProps) {
     vertical: "" as any,
     headquarters: "",
     presence: [] as string[],
-    regions: [] as string[],
+    regions: [] as Array<typeof isvRegions[number]>,
     coordinates: { lat: 0, lng: 0 },
     size: "" as any,
     maturityStage: "" as any,
@@ -155,7 +155,7 @@ export function AddISVDialog({ open, onOpenChange }: AddISVDialogProps) {
               <Label htmlFor="regions">Regions</Label>
               <Select
                 value={formData.regions[0] || ""}
-                onValueChange={(value: any) => setFormData(prev => ({
+                onValueChange={(value: typeof isvRegions[number]) => setFormData(prev => ({
                   ...prev,
                   regions: value ? [value] : []
                 }))}

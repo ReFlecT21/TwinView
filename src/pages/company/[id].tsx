@@ -1080,7 +1080,7 @@ export default function CompanyDetailsPage() {
             {/* Scoring Dashboard Tab */}
             <TabsContent value="scoring">
               <ScoringDashboard
-                company={company}
+                company={company as any}
                 onUpdate={() => {
                   refetch();
                   utils.companies.invalidate();
@@ -1091,28 +1091,31 @@ export default function CompanyDetailsPage() {
             {/* Comparison Tab */}
             <TabsContent value="comparison">
               <ComparisonView
-                companies={allCompanies}
+                companies={allCompanies as any}
                 initialCompanyId={company.id}
               />
             </TabsContent>
 
             {/* Evidence Tab */}
             <TabsContent value="evidence" className="space-y-6">
+              {(() => {
+                const companyScores = (company as any).scores;
+                return (
               <Card className="p-6">
                 <h3 className="text-xl font-semibold mb-6">Evidence & Justifications</h3>
 
                 {/* Evidence for each score */}
                 <div className="space-y-6">
-                  {company.scores?.dataReliabilityEvidence && company.scores.dataReliabilityEvidence.length > 0 && (
+                  {companyScores?.dataReliabilityEvidence && companyScores.dataReliabilityEvidence.length > 0 && (
                     <div>
                       <h4 className="font-medium mb-3 flex items-center gap-2">
                         Data Reliability
                         <Badge variant="secondary">
-                          {formatScore(company.scores.dataReliability)} / 5
+                          {formatScore(companyScores.dataReliability)} / 5
                         </Badge>
                       </h4>
                       <div className="space-y-2">
-                        {company.scores.dataReliabilityEvidence.map((evidence, idx) => (
+                        {companyScores.dataReliabilityEvidence.map((evidence: string, idx: number) => (
                           <div key={idx} className="flex items-start gap-2 p-3 bg-secondary/30 rounded-lg">
                             <span className="text-primary mt-1">•</span>
                             <span className="text-sm">{evidence}</span>
@@ -1122,16 +1125,16 @@ export default function CompanyDetailsPage() {
                     </div>
                   )}
 
-                  {company.scores?.industryEvidence && company.scores.industryEvidence.length > 0 && (
+                  {companyScores?.industryEvidence && companyScores.industryEvidence.length > 0 && (
                     <div>
                       <h4 className="font-medium mb-3 flex items-center gap-2">
                         Industry Fit
                         <Badge variant="secondary">
-                          {formatScore(company.scores.industry)} / 5
+                          {formatScore(companyScores.industry)} / 5
                         </Badge>
                       </h4>
                       <div className="space-y-2">
-                        {company.scores.industryEvidence.map((evidence, idx) => (
+                        {companyScores.industryEvidence.map((evidence: string, idx: number) => (
                           <div key={idx} className="flex items-start gap-2 p-3 bg-secondary/30 rounded-lg">
                             <span className="text-primary mt-1">•</span>
                             <span className="text-sm">{evidence}</span>
@@ -1141,16 +1144,16 @@ export default function CompanyDetailsPage() {
                     </div>
                   )}
 
-                  {company.scores?.existingRelationsEvidence && company.scores.existingRelationsEvidence.length > 0 && (
+                  {companyScores?.existingRelationsEvidence && companyScores.existingRelationsEvidence.length > 0 && (
                     <div>
                       <h4 className="font-medium mb-3 flex items-center gap-2">
                         Existing Relations
                         <Badge variant="secondary">
-                          {formatScore(company.scores.existingRelations)} / 5
+                          {formatScore(companyScores.existingRelations)} / 5
                         </Badge>
                       </h4>
                       <div className="space-y-2">
-                        {company.scores.existingRelationsEvidence.map((evidence, idx) => (
+                        {companyScores.existingRelationsEvidence.map((evidence: string, idx: number) => (
                           <div key={idx} className="flex items-start gap-2 p-3 bg-secondary/30 rounded-lg">
                             <span className="text-primary mt-1">•</span>
                             <span className="text-sm">{evidence}</span>
@@ -1160,10 +1163,10 @@ export default function CompanyDetailsPage() {
                     </div>
                   )}
 
-                  {(!company.scores ||
-                    ((!company.scores.dataReliabilityEvidence || company.scores.dataReliabilityEvidence.length === 0) &&
-                     (!company.scores.industryEvidence || company.scores.industryEvidence.length === 0) &&
-                     (!company.scores.existingRelationsEvidence || company.scores.existingRelationsEvidence.length === 0))) && (
+                  {(!companyScores ||
+                    ((!companyScores.dataReliabilityEvidence || companyScores.dataReliabilityEvidence.length === 0) &&
+                     (!companyScores.industryEvidence || companyScores.industryEvidence.length === 0) &&
+                     (!companyScores.existingRelationsEvidence || companyScores.existingRelationsEvidence.length === 0))) && (
                     <div className="text-center py-12 text-muted-foreground">
                       <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
                       <p>No evidence points added yet.</p>
@@ -1172,6 +1175,8 @@ export default function CompanyDetailsPage() {
                   )}
                 </div>
               </Card>
+                );
+              })()}
             </TabsContent>
 
             {/* Keep old tabs hidden for now but available */}
@@ -2525,7 +2530,7 @@ export default function CompanyDetailsPage() {
 
             {/* ISV Partners Tab */}
             <TabsContent value="isv-partners" className="space-y-6">
-              <ISVPartnersTab companyId={company.id} company={company} />
+              <ISVPartnersTab companyId={company.id} company={company as any} />
             </TabsContent>
 
             <TabsContent value="personnel" className="space-y-6">

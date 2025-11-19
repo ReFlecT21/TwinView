@@ -81,7 +81,7 @@ export default function ValueChainPage() {
       <Header
         title="Digital Twin Value Chain Analysis"
         description="Analyze partner coverage and opportunities across the Digital Twin value chain"
-        actions={
+        actionButton={
           <Button onClick={handleExportReport} variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Export Report
@@ -221,7 +221,7 @@ export default function ValueChainPage() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4">
-            {valueChainStats?.gaps.length > 0 && (
+            {(valueChainStats?.gaps?.length ?? 0) > 0 && (
               <Card className="border-amber-200 bg-amber-50">
                 <CardHeader>
                   <CardTitle className="text-amber-800">Partnership Gaps Identified</CardTitle>
@@ -231,7 +231,7 @@ export default function ValueChainPage() {
                     The following stages have less than 5 partners and represent opportunities for growth:
                   </p>
                   <div className="space-y-2">
-                    {valueChainStats.gaps.map(gap => (
+                    {valueChainStats?.gaps?.map(gap => (
                       <div key={gap} className="flex items-center justify-between p-3 bg-white rounded-lg">
                         <span className="font-medium">{stageLabels[gap]}</span>
                         <Button
