@@ -158,32 +158,50 @@ const techMahindraData = {
   ]
 };
 
+// Array to hold all companies data
+const companiesData = [
+  techMahindraData,
+  // Add more companies here as needed
+];
+
+async function seedCompany(companyData: any) {
+  const existingCompany = await prisma.company.findFirst({
+    where: { name: companyData.name }
+  });
+
+  if (existingCompany) {
+    console.log(`⚠️  ${companyData.name} already exists, updating...`);
+    const updated = await prisma.company.update({
+      where: { id: existingCompany.id },
+      data: companyData
+    });
+    console.log(`✅ Updated ${companyData.name}:`, updated.id);
+    return updated;
+  } else {
+    const created = await prisma.company.create({
+      data: companyData
+    });
+    console.log(`✅ Created ${companyData.name}:`, created.id);
+    return created;
+  }
+}
+
 async function seedCompanies() {
   console.log('🌱 Starting company seeding...');
+  console.log(`📊 Found ${companiesData.length} companies to process\n`);
 
   try {
-    // Check if Tech Mahindra already exists
-    const existingCompany = await prisma.company.findFirst({
-      where: { name: "Tech Mahindra" }
-    });
-
-    if (existingCompany) {
-      console.log('⚠️ Tech Mahindra already exists, updating...');
-      const updated = await prisma.company.update({
-        where: { id: existingCompany.id },
-        data: techMahindraData
-      });
-      console.log('✅ Updated Tech Mahindra:', updated.id);
-    } else {
-      const created = await prisma.company.create({
-        data: techMahindraData
-      });
-      console.log('✅ Created Tech Mahindra:', created.id);
+    for (const companyData of companiesData) {
+      try {
+        await seedCompany(companyData);
+      } catch (error) {
+        console.error(`❌ Error seeding ${companyData.name}:`, error);
+      }
     }
 
-    console.log('🎉 Company seeding completed successfully!');
+    console.log('\n🎉 Company seeding completed successfully!');
   } catch (error) {
-    console.error('❌ Error seeding companies:', error);
+    console.error('❌ Error in seeding process:', error);
     throw error;
   } finally {
     await prisma.$disconnect();
@@ -198,4 +216,9 @@ seedCompanies()
     process.exit(1);
   });
 
-export { seedCompanies, techMahindraData };
+// Helper function to add a new company to the seed data
+export function addCompanyData(companyData: any) {
+  companiesData.push(companyData);
+}
+
+export { seedCompanies, techMahindraData, companiesData };
