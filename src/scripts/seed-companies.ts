@@ -190,14 +190,12 @@ async function seedCompanies() {
   }
 }
 
-// Run if this file is executed directly
-if (require.main === module) {
-  seedCompanies()
-    .then(() => process.exit(0))
-    .catch((error) => {
-      console.error(error);
-      process.exit(1);
-    });
-}
+// Run the seeding function
+seedCompanies()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
 
 export { seedCompanies, techMahindraData };

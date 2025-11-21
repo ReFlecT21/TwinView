@@ -19,30 +19,35 @@ interface ScoringDashboardProps {
 }
 
 export function ScoringDashboard({ company, onUpdate }: ScoringDashboardProps) {
-  const scores = company.scores || {
-    dataReliability: 3,
-    dataReliabilityEvidence: [],
-    existingRelations: 3,
-    existingRelationsEvidence: [],
-    industry: 3,
-    industryEvidence: [],
-    revenuePotential: 3,
-    revenuePotentialEvidence: [],
-    projects: 3,
-    projectsEvidence: [],
-    partnerMarketAccess: 3,
-    partnerMarketAccessEvidence: [],
-    solutionMaturity: 3,
-    solutionMaturityEvidence: [],
-    partnerScale: 3,
-    partnerScaleEvidence: [],
-    growthMomentum: 3,
-    growthMomentumEvidence: [],
-    investmentReadiness: 3,
-    investmentReadinessEvidence: [],
-    totalScore: 3,
-    lastUpdated: new Date().toISOString(),
-    updatedBy: "",
+  // Parse scores if they come as string, otherwise use the object
+  const rawScores = typeof company.scores === 'string'
+    ? JSON.parse(company.scores)
+    : company.scores;
+
+  const scores = {
+    dataReliability: rawScores?.dataReliability || 3,
+    dataReliabilityEvidence: rawScores?.dataReliabilityEvidence || [],
+    existingRelations: rawScores?.existingRelations || 3,
+    existingRelationsEvidence: rawScores?.existingRelationsEvidence || [],
+    industry: rawScores?.industry || 3,
+    industryEvidence: rawScores?.industryEvidence || [],
+    revenuePotential: rawScores?.revenuePotential || 3,
+    revenuePotentialEvidence: rawScores?.revenuePotentialEvidence || [],
+    projects: rawScores?.projects || 3,
+    projectsEvidence: rawScores?.projectsEvidence || [],
+    partnerMarketAccess: rawScores?.partnerMarketAccess || 3,
+    partnerMarketAccessEvidence: rawScores?.partnerMarketAccessEvidence || [],
+    solutionMaturity: rawScores?.solutionMaturity || 3,
+    solutionMaturityEvidence: rawScores?.solutionMaturityEvidence || [],
+    partnerScale: rawScores?.partnerScale || 3,
+    partnerScaleEvidence: rawScores?.partnerScaleEvidence || [],
+    growthMomentum: rawScores?.growthMomentum || 3,
+    growthMomentumEvidence: rawScores?.growthMomentumEvidence || [],
+    investmentReadiness: rawScores?.investmentReadiness || 3,
+    investmentReadinessEvidence: rawScores?.investmentReadinessEvidence || [],
+    totalScore: rawScores?.totalScore || 3,
+    lastUpdated: rawScores?.lastUpdated || new Date().toISOString(),
+    updatedBy: rawScores?.updatedBy || "",
   };
 
   return (
