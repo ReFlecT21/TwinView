@@ -231,12 +231,17 @@ export default function Companies() {
                   </TableRow>
                 ) : (
                   sortedCompanies.map((company, index) => {
-                    const scores = (company as any).scores || {
-                      totalScore: 3,
-                      revenuePotential: 3,
-                      dataReliability: 3,
-                      industry: 3,
-                      existingRelations: 3,
+                    // Parse scores if they come as string, otherwise use the object
+                    const rawScores = typeof (company as any).scores === 'string'
+                      ? JSON.parse((company as any).scores)
+                      : (company as any).scores;
+
+                    const scores = {
+                      totalScore: rawScores?.totalScore || 3,
+                      revenuePotential: rawScores?.revenuePotential || 3,
+                      dataReliability: rawScores?.dataReliability || 3,
+                      industry: rawScores?.industry || 3,
+                      existingRelations: rawScores?.existingRelations || 3,
                     };
 
                     return (
