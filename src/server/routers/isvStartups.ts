@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { router, publicProcedure, getCurrentUserInfo } from '../trpc';
-import { isvVerticals, isvSizes, isvInterestLevels, isvMaturityStages, isvRegions, ValueChainStage } from '@shared/schema';
+import { isvVerticals, isvSizes, isvInterestLevels, isvMaturityStages, isvRegions } from '@shared/schema';
+import { ValueChainStage } from '@prisma/client';
 
 const createISVSchema = z.object({
   name: z.string(),

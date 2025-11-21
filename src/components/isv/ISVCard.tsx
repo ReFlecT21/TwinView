@@ -1,4 +1,5 @@
-import { ISVStartup, ValueChainStage } from "@shared/schema";
+import { ISVStartup } from "@shared/schema";
+import { ValueChainStage } from "@prisma/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

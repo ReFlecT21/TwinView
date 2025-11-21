@@ -17,7 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ISVStartup, isvVerticals, isvSizes, isvInterestLevels, ValueChainStage } from "@shared/schema";
+import { ISVStartup, isvVerticals, isvSizes, isvInterestLevels } from "@shared/schema";
+import { ValueChainStage } from "@prisma/client";
 import { trpc } from "@/lib/trpc";
 import {
   MapPin,
