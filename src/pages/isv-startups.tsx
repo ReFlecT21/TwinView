@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ISVStartup, isvVerticals, isvSizes, isvInterestLevels } from "@shared/schema";
+import { ISVStartup, isvVerticals, isvSizes, isvInterestLevels, ValueChainStage } from "@shared/schema";
 import { trpc } from "@/lib/trpc";
 import {
   MapPin,
@@ -33,8 +33,49 @@ import {
   Download,
   TrendingUp,
   Sparkles,
+  Database,
+  Cpu,
+  HardDrive,
+  Brain,
+  Monitor,
+  Layers,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
+
+// Value chain stage data
+const valueChainStages = [
+  {
+    stage: ValueChainStage.DATA_CAPTURE_INGESTION,
+    label: "Data Capture & Ingestion",
+    icon: Database,
+    color: "text-blue-600",
+  },
+  {
+    stage: ValueChainStage.EDGE_PROCESSING,
+    label: "Edge Processing",
+    icon: Cpu,
+    color: "text-purple-600",
+  },
+  {
+    stage: ValueChainStage.STORAGE_MANAGEMENT,
+    label: "Storage & Management",
+    icon: HardDrive,
+    color: "text-green-600",
+  },
+  {
+    stage: ValueChainStage.COMPUTE_SIMULATION,
+    label: "Compute & Simulation",
+    icon: Brain,
+    color: "text-orange-600",
+  },
+  {
+    stage: ValueChainStage.VISUALIZATION_DECISION,
+    label: "Visualization & Decision",
+    icon: Monitor,
+    color: "text-indigo-600",
+  },
+];
 
 // Dynamic import for the map component to avoid SSR issues
 const ISVMap = dynamic(
@@ -54,6 +95,7 @@ export default function ISVStartupsPage() {
   const [selectedInterest, setSelectedInterest] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedValueChainStages, setSelectedValueChainStages] = useState<ValueChainStage[]>([]);
 
   // Fetch ISV data
   const { data: isvStartups = [], isLoading } = trpc.isvStartups.getAll.useQuery({
@@ -61,6 +103,7 @@ export default function ISVStartupsPage() {
     size: selectedSize !== "all" ? selectedSize as any : undefined,
     interestLevel: selectedInterest !== "all" ? selectedInterest as any : undefined,
     search: searchQuery || undefined,
+    valueChainStages: selectedValueChainStages.length > 0 ? selectedValueChainStages : undefined,
   });
 
   // Fetch vertical counts
@@ -225,84 +268,140 @@ export default function ISVStartupsPage() {
 
         {/* Filters */}
         <Card className="p-4">
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex items-center gap-2 flex-1 min-w-[250px]">
-              <Search className="w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search ISV/Startup..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1"
-              />
+          <div className="flex flex-col gap-4">
+            {/* Search and primary filters */}
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex items-center gap-2 flex-1 min-w-[250px]">
+                <Search className="w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search ISV/Startup..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1"
+                />
+              </div>
+
+              <Select value={selectedVertical} onValueChange={setSelectedVertical}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Verticals" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Verticals</SelectItem>
+                  {isvVerticals.map((vertical) => (
+                    <SelectItem key={vertical} value={vertical}>
+                      {vertical.replace("_", " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedSize} onValueChange={setSelectedSize}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="All Sizes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sizes</SelectItem>
+                  {isvSizes.map((size) => (
+                    <SelectItem key={size} value={size}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedInterest} onValueChange={setSelectedInterest}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="All Interest" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Interest</SelectItem>
+                  {isvInterestLevels.map((level) => (
+                    <SelectItem key={level} value={level}>
+                      {level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="flex rounded-lg bg-muted p-1 ml-auto">
+                <Button
+                  variant={activeView === "map" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setActiveView("map")}
+                  className="px-3"
+                >
+                  <Map className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={activeView === "grid" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setActiveView("grid")}
+                  className="px-3"
+                >
+                  <Grid3x3 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={activeView === "vertical" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setActiveView("vertical")}
+                  className="px-3"
+                >
+                  <Filter className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
-            <Select value={selectedVertical} onValueChange={setSelectedVertical}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Verticals" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Verticals</SelectItem>
-                {isvVerticals.map((vertical) => (
-                  <SelectItem key={vertical} value={vertical}>
-                    {vertical.replace("_", " ")}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedSize} onValueChange={setSelectedSize}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="All Sizes" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sizes</SelectItem>
-                {isvSizes.map((size) => (
-                  <SelectItem key={size} value={size}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedInterest} onValueChange={setSelectedInterest}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="All Interest" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Interest</SelectItem>
-                {isvInterestLevels.map((level) => (
-                  <SelectItem key={level} value={level}>
-                    {level}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <div className="flex rounded-lg bg-muted p-1 ml-auto">
-              <Button
-                variant={activeView === "map" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setActiveView("map")}
-                className="px-3"
-              >
-                <Map className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={activeView === "grid" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setActiveView("grid")}
-                className="px-3"
-              >
-                <Grid3x3 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={activeView === "vertical" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setActiveView("vertical")}
-                className="px-3"
-              >
-                <Filter className="w-4 h-4" />
-              </Button>
+            {/* Value Chain Stage Filters */}
+            <div className="border rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Layers className="w-4 h-4" />
+                <span className="font-medium text-sm">Filter by Value Chain Stages</span>
+                {selectedValueChainStages.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {selectedValueChainStages.length} selected
+                  </Badge>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto text-xs"
+                  onClick={() => setSelectedValueChainStages([])}
+                >
+                  Clear All
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                {valueChainStages.map(({ stage, label, icon: Icon, color }) => {
+                  const isSelected = selectedValueChainStages.includes(stage);
+                  return (
+                    <div
+                      key={stage}
+                      className="flex items-start space-x-2"
+                    >
+                      <Checkbox
+                        id={stage}
+                        checked={isSelected}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedValueChainStages([...selectedValueChainStages, stage]);
+                          } else {
+                            setSelectedValueChainStages(
+                              selectedValueChainStages.filter(s => s !== stage)
+                            );
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor={stage}
+                        className="flex items-center gap-2 cursor-pointer text-sm"
+                      >
+                        <Icon className={`w-4 h-4 ${color}`} />
+                        <span>{label}</span>
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </Card>

@@ -1,4 +1,4 @@
-import { ISVStartup } from "@shared/schema";
+import { ISVStartup, ValueChainStage } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,12 @@ import {
   XCircle,
   Star,
   ArrowRight,
+  Layers,
+  Database,
+  Cpu,
+  HardDrive,
+  Brain,
+  Monitor,
 } from "lucide-react";
 
 interface ISVCardProps {
@@ -44,6 +50,23 @@ const getVerticalIcon = (vertical: string) => {
       return "🏥";
     default:
       return "🏢";
+  }
+};
+
+const getValueChainStageInfo = (stage: ValueChainStage) => {
+  switch (stage) {
+    case ValueChainStage.DATA_CAPTURE_INGESTION:
+      return { icon: Database, label: "Data Capture", color: "text-blue-600" };
+    case ValueChainStage.EDGE_PROCESSING:
+      return { icon: Cpu, label: "Edge", color: "text-purple-600" };
+    case ValueChainStage.STORAGE_MANAGEMENT:
+      return { icon: HardDrive, label: "Storage", color: "text-green-600" };
+    case ValueChainStage.COMPUTE_SIMULATION:
+      return { icon: Brain, label: "Compute", color: "text-orange-600" };
+    case ValueChainStage.VISUALIZATION_DECISION:
+      return { icon: Monitor, label: "Visualization", color: "text-indigo-600" };
+    default:
+      return { icon: Layers, label: "Unknown", color: "text-gray-600" };
   }
 };
 
@@ -110,6 +133,28 @@ export function ISVCard({ isv, onViewDetails, onMatchPartners }: ISVCardProps) {
             </div>
           )}
         </div>
+
+        {/* Value Chain Coverage */}
+        {isv.valueChainStages && isv.valueChainStages.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Layers className="w-4 h-4" />
+              <span>Value Chain Coverage ({isv.valueChainStages.length}/5)</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {isv.valueChainStages.map(stage => {
+                const stageInfo = getValueChainStageInfo(stage);
+                const StageIcon = stageInfo.icon;
+                return (
+                  <Badge key={stage} variant="secondary" className="text-xs flex items-center gap-1">
+                    <StageIcon className={`w-3 h-3 ${stageInfo.color}`} />
+                    <span>{stageInfo.label}</span>
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Openness & Compatibility */}
         <div className="space-y-2 p-3 bg-secondary/30 rounded-lg">

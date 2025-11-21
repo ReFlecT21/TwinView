@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { router, publicProcedure, getCurrentUserInfo } from '../trpc';
-import { isvVerticals, isvSizes, isvInterestLevels, isvMaturityStages, isvRegions } from '@shared/schema';
+import { isvVerticals, isvSizes, isvInterestLevels, isvMaturityStages, isvRegions, ValueChainStage } from '@shared/schema';
 
 const createISVSchema = z.object({
   name: z.string(),
@@ -42,6 +42,7 @@ export const isvStartupsRouter = router({
       interestLevel: z.enum(isvInterestLevels).optional(),
       region: z.enum(isvRegions).optional(),
       search: z.string().optional(),
+      valueChainStages: z.array(z.nativeEnum(ValueChainStage)).optional(),
     }).optional())
     .query(async ({ ctx, input }) => {
       const where: any = {};
@@ -54,6 +55,13 @@ export const isvStartupsRouter = router({
           { name: { contains: input.search, mode: 'insensitive' } },
           { headquarters: { contains: input.search, mode: 'insensitive' } },
         ];
+      }
+
+      // Filter by value chain stages - ISVs that have ANY of the selected stages
+      if (input?.valueChainStages && input.valueChainStages.length > 0) {
+        where.valueChainStages = {
+          hasSome: input.valueChainStages,
+        };
       }
 
       return ctx.prisma.iSVStartup.findMany({
