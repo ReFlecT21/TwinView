@@ -135,27 +135,63 @@ export function ISVCard({ isv, onViewDetails, onMatchPartners }: ISVCardProps) {
           )}
         </div>
 
-        {/* Value Chain Coverage */}
-        {isv.valueChainStages && isv.valueChainStages.length > 0 && (
-          <div className="space-y-2">
+        {/* Value Chain Coverage - Visual Quick View */}
+        <div className="space-y-2 p-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-lg border">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Layers className="w-4 h-4" />
-              <span>Value Chain Coverage ({isv.valueChainStages.length}/5)</span>
+              <span>Digital Twin Value Chain</span>
             </div>
-            <div className="flex flex-wrap gap-1">
-              {isv.valueChainStages.map(stage => {
-                const stageInfo = getValueChainStageInfo(stage);
-                const StageIcon = stageInfo.icon;
-                return (
-                  <Badge key={stage} variant="secondary" className="text-xs flex items-center gap-1">
-                    <StageIcon className={`w-3 h-3 ${stageInfo.color}`} />
-                    <span>{stageInfo.label}</span>
-                  </Badge>
-                );
-              })}
-            </div>
+            <span className="text-xs text-muted-foreground">
+              {isv.valueChainStages?.length || 0}/5 stages
+            </span>
           </div>
-        )}
+          <div className="flex gap-1">
+            {[
+              ValueChainStage.DATA_CAPTURE_INGESTION,
+              ValueChainStage.EDGE_PROCESSING,
+              ValueChainStage.STORAGE_MANAGEMENT,
+              ValueChainStage.COMPUTE_SIMULATION,
+              ValueChainStage.VISUALIZATION_DECISION,
+            ].map((stage) => {
+              const stageInfo = getValueChainStageInfo(stage);
+              const StageIcon = stageInfo.icon;
+              const isCovered = isv.valueChainStages?.includes(stage) || false;
+
+              return (
+                <div
+                  key={stage}
+                  className={`flex-1 flex flex-col items-center p-2 rounded-md transition-all ${
+                    isCovered
+                      ? 'bg-white dark:bg-gray-800 shadow-sm border-2 border-blue-200 dark:border-blue-700'
+                      : 'bg-gray-100 dark:bg-gray-900 opacity-40'
+                  }`}
+                  title={`${stageInfo.label}${isCovered ? ' ✓' : ' - Not covered'}`}
+                >
+                  <StageIcon
+                    className={`w-4 h-4 mb-1 ${
+                      isCovered ? stageInfo.color : 'text-gray-400'
+                    }`}
+                  />
+                  <span className={`text-[10px] text-center leading-tight ${
+                    isCovered ? 'font-medium' : 'text-gray-500'
+                  }`}>
+                    {stageInfo.label.split(' ')[0]}
+                  </span>
+                  {isCovered && (
+                    <CheckCircle className="w-3 h-3 text-green-500 mt-0.5" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {/* Show products/solutions count if available */}
+          {isv.products && Array.isArray(isv.products) && isv.products.length > 0 && (
+            <div className="text-xs text-muted-foreground text-center pt-1 border-t">
+              {isv.products.length} product{isv.products.length !== 1 ? 's' : ''} / solution{isv.products.length !== 1 ? 's' : ''}
+            </div>
+          )}
+        </div>
 
         {/* Openness & Compatibility */}
         <div className="space-y-2 p-3 bg-secondary/30 rounded-lg">
