@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -19,6 +20,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc";
 import { useToast } from "@/hooks/use-toast";
+import { ISVValueChainView } from "@/components/isv/ISVValueChainView";
+import { ISVProductManager } from "@/components/isv/ISVProductManager";
+import { ValueChainStage } from "@prisma/client";
 import {
   isvVerticals,
   isvSizes,
@@ -42,6 +46,10 @@ import {
   X,
   Plus,
   Loader2,
+  GitBranch,
+  FileText,
+  Target,
+  Briefcase,
 } from "lucide-react";
 
 export default function ISVDetailPage() {
@@ -123,6 +131,13 @@ export default function ISVDetailPage() {
         interestReasons: isv.interestReasons || [],
         notes: isv.notes || "",
         strategicValue: isv.strategicValue || "",
+        // Value chain fields
+        valueChainStages: isv.valueChainStages || [],
+        primaryValueChainStage: isv.primaryValueChainStage || null,
+        products: isv.products || [],
+        solutionsByStage: isv.solutionsByStage || {},
+        technologyOffering: isv.technologyOffering || {},
+        valueChainCapabilities: isv.valueChainCapabilities || {},
       });
     }
   }, [isv]);
@@ -160,6 +175,13 @@ export default function ISVDetailPage() {
         interestReasons: isv.interestReasons || [],
         notes: isv.notes || "",
         strategicValue: isv.strategicValue || "",
+        // Value chain fields
+        valueChainStages: isv.valueChainStages || [],
+        primaryValueChainStage: isv.primaryValueChainStage || null,
+        products: isv.products || [],
+        solutionsByStage: isv.solutionsByStage || {},
+        technologyOffering: isv.technologyOffering || {},
+        valueChainCapabilities: isv.valueChainCapabilities || {},
       });
     }
   };
@@ -292,8 +314,39 @@ export default function ISVDetailPage() {
 
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-6xl mx-auto space-y-6">
-          {/* Overview Card */}
-          <Card className="p-6">
+          {/* Tabs for different sections */}
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="overview">
+                <Briefcase className="w-4 h-4 mr-2" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="valuechain">
+                <GitBranch className="w-4 h-4 mr-2" />
+                Value Chain
+              </TabsTrigger>
+              <TabsTrigger value="geographic">
+                <Globe className="w-4 h-4 mr-2" />
+                Geographic
+              </TabsTrigger>
+              <TabsTrigger value="integrations">
+                <Link2 className="w-4 h-4 mr-2" />
+                Integrations
+              </TabsTrigger>
+              <TabsTrigger value="strategic">
+                <Target className="w-4 h-4 mr-2" />
+                Strategic
+              </TabsTrigger>
+              <TabsTrigger value="notes">
+                <FileText className="w-4 h-4 mr-2" />
+                Notes
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-6">
+              {/* Overview Card */}
+              <Card className="p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-4 w-full">
                 <div className="text-4xl">{getVerticalIcon()}</div>
@@ -496,10 +549,34 @@ export default function ISVDetailPage() {
               </div>
             )}
           </Card>
+            </TabsContent>
 
-          {/* Geographic Presence */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Geographic Presence</h3>
+            {/* Value Chain Tab */}
+            <TabsContent value="valuechain" className="space-y-6">
+              {isEditMode ? (
+                <ISVProductManager
+                  valueChainStages={formData.valueChainStages || []}
+                  products={formData.products || []}
+                  solutionsByStage={formData.solutionsByStage || {}}
+                  technologyOffering={formData.technologyOffering || {}}
+                  valueChainCapabilities={formData.valueChainCapabilities || {}}
+                  onUpdate={(data) => {
+                    setFormData({
+                      ...formData,
+                      ...data,
+                    });
+                  }}
+                  isEditMode={isEditMode}
+                />
+              ) : (
+                <ISVValueChainView isv={isEditMode ? formData : isv} />
+              )}
+            </TabsContent>
+
+            {/* Geographic Tab */}
+            <TabsContent value="geographic" className="space-y-6">
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Geographic Presence</h3>
             {isEditMode ? (
               <div className="space-y-4">
                 <div>
@@ -585,10 +662,12 @@ export default function ISVDetailPage() {
               </div>
             )}
           </Card>
+            </TabsContent>
 
-          {/* Integrations & Partnerships */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Integrations & Partnerships</h3>
+            {/* Integrations Tab */}
+            <TabsContent value="integrations" className="space-y-6">
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Integrations & Partnerships</h3>
             {isEditMode ? (
               <div className="space-y-4">
                 {/* Integrations */}
@@ -747,10 +826,12 @@ export default function ISVDetailPage() {
               </div>
             )}
           </Card>
+            </TabsContent>
 
-          {/* Strategic Assessment */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Strategic Assessment</h3>
+            {/* Strategic Tab */}
+            <TabsContent value="strategic" className="space-y-6">
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Strategic Assessment</h3>
             {isEditMode ? (
               <div className="space-y-4">
                 <div>
@@ -822,10 +903,12 @@ export default function ISVDetailPage() {
               </>
             )}
           </Card>
+            </TabsContent>
 
-          {/* Notes */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Notes</h3>
+            {/* Notes Tab */}
+            <TabsContent value="notes" className="space-y-6">
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Notes</h3>
             {isEditMode ? (
               <Textarea
                 value={formData.notes}
@@ -839,6 +922,8 @@ export default function ISVDetailPage() {
               </p>
             )}
           </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

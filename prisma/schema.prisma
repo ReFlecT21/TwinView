@@ -221,6 +221,8 @@ model ISVStartup {
   technologyOffering      Json               @default("{}") // Technologies offered by stage
   valueChainCapabilities  Json               @default("{}") // Capabilities per stage
   integrationPoints       Json               @default("[]") // Integration points with Dell stack
+  products                Json               @default("[]") // ISV's own products/solutions
+  solutionsByStage        Json               @default("{}") // Solutions mapped to value chain stages
 
   // Metadata
   notes                   String?
